@@ -1,0 +1,89 @@
+.homePageWrapper{
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffff;
+}
+
+.formWrapper{
+  background: #282a36;
+  padding: 20px;
+  border-radius: 10px;
+  width: 400px;
+  max-width: 85%;
+}
+
+.formWrapper img{
+  width: 350px;
+  margin-bottom: 25px;
+}
+
+footer{
+  position: fixed !important;
+  bottom: 0;
+}
+
+footer a {
+  color: #5271ff;
+}
+
+input:focus::placeholder {
+  transition: all 0.2s ease-in-out;
+  color: transparent;
+} 
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.PasteIDRoomLabel{
+  margin-bottom: 20px;
+}
+
+.inputBox{
+  padding: 10px;
+  margin-bottom: 15px;
+  outline: none;
+  border: none;
+  border-radius: 3px;
+  font-size: 16px;
+  background: #eee;
+  font-weight: bold;
+}
+
+.btn{
+  border: none;
+  padding: 10px;
+  border-radius: 3px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+}
+
+.joinBtn{
+  background: #5271ff;
+  width: 100px;
+  margin-left: auto;
+}
+
+.joinBtn:hover{
+  background-color: #004aad;
+}
+
+.createInfo{
+  margin: 0 auto;
+  margin-top: 20px;
+}
+
+.createInfo a{
+  color: #5271ff;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+}
+
+.createInfo a:hover{
+  color: #004aad;
+}
+
