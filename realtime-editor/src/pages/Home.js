@@ -1,15 +1,43 @@
 import React, { useState } from 'react';
 import {v4 as uuidV4} from 'uuid';
+import toast from 'react-hot-toast';
+import {useNavigate} from 'react-router-dom'
 
 const Home = () => {
-
+    
+    const navigate = useNavigate();
     const [roomID, setRoomID] = useState('');
     const [Username, setUsername] = useState('');
 
+    // Create a new ROOM
     const createNewRoom = (e) =>{
         e.preventDefault();
         const id = uuidV4().toString();
         setRoomID(id);
+        toast.success('Room created');
+    }
+
+    // Join a ROOM and Redirect to EditorPage (joinRoom Button)
+    const joinRoom = () =>{
+        // RoomID or Username is required
+        if(!roomID || !Username){
+            toast.error('Please enter Room ID and Username');
+            return;
+        }
+
+        // Redirect to EditorPage
+        navigate(`/editor/${roomID}`,{
+            state: {
+                Username,
+            },
+        })
+    }
+
+    // Handle Enter Keyboard events
+    const handleInputEnter = (e) => {
+        if(e.code === 'Enter') {
+            joinRoom();
+        }
     }
 
   return (
@@ -24,6 +52,7 @@ const Home = () => {
                     placeholder="ROOMID" 
                     onChange={(e)=>{setRoomID(e.target.value)}}
                     value={roomID}
+                    onKeyUp={handleInputEnter}
                 />
 
                 <input 
@@ -32,9 +61,10 @@ const Home = () => {
                     placeholder="USERNAME"
                     onChange={(e)=>{setUsername(e.target.value)}}
                     value={Username}
+                    onKeyUp={handleInputEnter}
                 />
 
-                <button className="btn joinBtn"> Join </button>
+                <button className="btn joinBtn" onClick={joinRoom}> Join </button>
                 <span className="createInfo">
                         Do you want to create a new trunk? &nbsp;
                         <a onClick={createNewRoom} href="" className="NewRoom">New Room</a>
