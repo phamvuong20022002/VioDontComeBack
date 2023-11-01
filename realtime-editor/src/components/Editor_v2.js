@@ -11,7 +11,7 @@ import 'codemirror/addon/hint/show-hint';
 import 'codemirror/addon/hint/show-hint.css';
 import 'codemirror/addon/hint/css-hint'
 import 'codemirror/addon/hint/javascript-hint'
-import 'codemirror/addon/hint/anyword-hint'
+import 'codemirror/addon/hint/html-hint'
 
 const Editor = ({tab}) => {
     useEffect(() =>{
@@ -30,8 +30,7 @@ const Editor = ({tab}) => {
                     autoCloseTags: true,
                     autoCloseBrackets: true,
                     lineNumbers: true,
-                    extraKeys:{'Tab':'autocomplete'},
-                    goLineDownDown: true,
+                    extraKeys:{'Tab':'autocomplete'}
                 }).setValue(tab.value);
             }
             else{
@@ -41,6 +40,7 @@ const Editor = ({tab}) => {
         init();
     },[])
   return (
+    // classname/id = <Editor &quot;10&quot;> => 'Editor' + '&quot;' + tadID + '&quot;'
     <div className={'Editor ' + JSON.stringify(tab.tabID)}>
         <textarea id={JSON.stringify(tab.tabID)} ></textarea>
     </div>

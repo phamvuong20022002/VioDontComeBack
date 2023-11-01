@@ -7,7 +7,7 @@ const Home = () => {
     
     const navigate = useNavigate();
     const [roomID, setRoomID] = useState('');
-    const [Username, setUsername] = useState('');
+    const [username, setUsername] = useState('');
 
     // Create a new ROOM
     const createNewRoom = (e) =>{
@@ -20,7 +20,7 @@ const Home = () => {
     // Join a ROOM and Redirect to EditorPage (joinRoom Button)
     const joinRoom = () =>{
         // RoomID or Username is required
-        if(!roomID || !Username){
+        if(!roomID || !username){
             toast.error('Please enter Room ID and Username');
             return;
         }
@@ -28,7 +28,7 @@ const Home = () => {
         // Redirect to EditorPage
         navigate(`/editor/${roomID}`,{
             state: {
-                Username,
+                username,
             },
         })
     }
@@ -60,7 +60,7 @@ const Home = () => {
                     className="inputBox" 
                     placeholder="USERNAME"
                     onChange={(e)=>{setUsername(e.target.value)}}
-                    value={Username}
+                    value={username}
                     onKeyUp={handleInputEnter}
                 />
 

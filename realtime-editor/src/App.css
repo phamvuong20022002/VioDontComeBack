@@ -48,7 +48,7 @@ input:focus::placeholder {
   outline: none;
   border: none;
   border-radius: 3px;
-  font-size: 16px;
+  font-size: 15px;
   background: #eee;
   font-weight: bold;
 }
@@ -57,7 +57,7 @@ input:focus::placeholder {
   border: none;
   padding: 10px;
   border-radius: 3px;
-  font-size: 16px;
+  font-size: 14px;
   cursor: pointer;
   transition: all 0.3s ease-in-out;
   font-weight: bold;
@@ -121,6 +121,7 @@ input:focus::placeholder {
   align-items: center;
   flex-direction: column;
   font-weight: bold;
+  font-size: 14px;
 }
 
 .username{
@@ -204,4 +205,15 @@ input:focus::placeholder {
   border-top: 3px solid #004aad;
   background-color: #282a36;
 }
+
+.createTabBtn{
+  background: none;
+  color: white;
+  height: 100%;
+}
+
+.createTabBtn:hover{
+  background-color: #282a36;
+}
+
 
