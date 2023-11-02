@@ -38,6 +38,26 @@ io.on('connection',(socket)=>{
         });
         console.log(clients);
     });
+
+    socket.on(ACTIONS.CODE_CHANGE, ({roomId, tabId, code}) => {
+        socket.in(roomId).emit(ACTIONS.CODE_CHANGE, {tabId, code});
+    });
+
+    socket.on(ACTIONS.SYNC_CODE, ({socketId, tabId, code}) => {
+        io.to(socketId).emit(ACTIONS.CODE_CHANGE, {tabId, code});
+    });
+
+    socket.on('disconnecting', () =>{
+        const rooms = [...socket.rooms];
+        rooms.forEach((roomId) => {
+            socket.in(roomId).emit(ACTIONS.DISCONNECTED,{
+                socketId: socket.id,
+                username: userSocketMap[socket.id],
+            });
+        });
+        delete userSocketMap[socket.id];
+        socket.leave();
+    });
 });
 
 const PORT = process.env.REACT_APP_PORT || 5000;

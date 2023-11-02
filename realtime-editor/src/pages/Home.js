@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import {v4 as uuidV4} from 'uuid';
 import toast from 'react-hot-toast';
-import {useNavigate} from 'react-router-dom'
+import {useNavigate, useLocation} from 'react-router-dom'
 
 const Home = () => {
-    
+    const location = useLocation();
     const navigate = useNavigate();
-    const [roomID, setRoomID] = useState('');
+    const [roomID, setRoomID] = useState(location.state?.roomId || '');
     const [username, setUsername] = useState('');
 
     // Create a new ROOM

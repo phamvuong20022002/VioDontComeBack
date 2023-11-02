@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef} from 'react';
 import Codemirror from 'codemirror';
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/theme/dracula.css';
@@ -12,8 +12,13 @@ import 'codemirror/addon/hint/show-hint.css';
 import 'codemirror/addon/hint/css-hint'
 import 'codemirror/addon/hint/javascript-hint'
 import 'codemirror/addon/hint/anyword-hint'
+import ACTIONS from '../Actions';
 
-const Editor = ({tab}) => {
+const Editor = ({socketRef, roomId, tab, onCodeChange}) => {
+
+    const editorRef = useRef(null);
+    console.log(socketRef.current);
+
     useEffect(() =>{
         function isCreated(){
             const containerCodeMiror = document.getElementsByClassName('Editor ' + JSON.stringify(tab.tabID))[0];
@@ -23,16 +28,32 @@ const Editor = ({tab}) => {
 
         async function init(){
             if(!isCreated()){
-                console.log(tab.value);
-                Codemirror.fromTextArea(document.getElementById(JSON.stringify(tab.tabID)),{
-                    mode: tab.type,
-                    theme: 'dracula',
-                    autoCloseTags: true,
-                    autoCloseBrackets: true,
-                    lineNumbers: true,
-                    extraKeys:{'Tab':'autocomplete'},
-                    goLineDownDown: true,
-                }).setValue(tab.value);
+                editorRef.current = Codemirror.fromTextArea(
+                    document.getElementById(JSON.stringify(tab.tabID)),
+                    {
+                        mode: tab.type,
+                        theme: 'dracula',
+                        autoCloseTags: true,
+                        autoCloseBrackets: true,
+                        lineNumbers: true,
+                        extraKeys:{'Tab':'autocomplete'},
+                        goLineDownDown: true,
+                    }
+                );
+
+                editorRef.current.on('change', (instance, changes) => {
+                    const {origin} = changes;
+                    const code = instance.getValue();
+                    onCodeChange(code);
+                    if(origin !== 'setValue'){
+                        socketRef.current.emit(ACTIONS.CODE_CHANGE,{
+                            roomId,
+                            tabId: tab.tabID,
+                            code,
+                        })
+                    }
+                });
+
             }
             else{
                 return;
@@ -40,6 +61,22 @@ const Editor = ({tab}) => {
         };
         init();
     },[])
+
+    useEffect(() => {
+        if(socketRef.current){
+            socketRef.current.on(ACTIONS.CODE_CHANGE,({tabId, code}) => {
+                console.log("abc", tabId);
+                if(code !== null && tab.tabID === tabId){
+                    editorRef.current.setValue(code);
+                }
+            })
+        }
+
+        return () =>{
+            socketRef.current.off(ACTIONS.CODE_CHANGE);
+        }
+    },[socketRef.current])
+
   return (
     <div className={'Editor ' + JSON.stringify(tab.tabID)}>
         <textarea id={JSON.stringify(tab.tabID)} ></textarea>
