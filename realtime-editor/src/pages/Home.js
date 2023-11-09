@@ -76,6 +76,10 @@ const Home = () => {
                 Chicken coder {' '}
                 <a href="https://facebook.com/phamhihihi">Vuong Pham</a>
             </h4>
+            <h5>
+                Beta 1.0.0 on DEV
+                released version date: 26/10/2023 
+            </h5>
         </footer>
     </div>
     

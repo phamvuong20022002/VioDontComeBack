@@ -28,6 +28,10 @@ footer a {
   color: #5271ff;
 }
 
+footer h4{
+  text-align: center !important;
+}
+
 input:focus::placeholder {
   transition: all 0.2s ease-in-out;
   color: transparent;

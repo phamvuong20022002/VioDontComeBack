@@ -17,12 +17,12 @@ import ACTIONS from '../Actions';
 const Editor = ({socketRef, roomId, tab, onCodeChange}) => {
 
     const editorRef = useRef(null);
-    console.log(socketRef.current);
 
     useEffect(() =>{
+        console.log("AAAAAAAAAAAA",tab);
         function isCreated(){
-            const containerCodeMiror = document.getElementsByClassName('Editor ' + JSON.stringify(tab.tabID))[0];
-            const codemirror = containerCodeMiror.getElementsByClassName("CodeMirror").length;
+            const containerCodeMirror = document.getElementsByClassName('Editor ' + JSON.stringify(tab.tabID))[0];
+            const codemirror = containerCodeMirror.getElementsByClassName("CodeMirror").length;
             return Boolean(codemirror);
         };
 
@@ -38,9 +38,10 @@ const Editor = ({socketRef, roomId, tab, onCodeChange}) => {
                         lineNumbers: true,
                         extraKeys:{'Tab':'autocomplete'},
                         goLineDownDown: true,
+                        autocorrect: true,
                     }
                 );
-
+                
                 editorRef.current.on('change', (instance, changes) => {
                     const {origin} = changes;
                     const code = instance.getValue();
@@ -65,7 +66,6 @@ const Editor = ({socketRef, roomId, tab, onCodeChange}) => {
     useEffect(() => {
         if(socketRef.current){
             socketRef.current.on(ACTIONS.CODE_CHANGE,({tabId, code}) => {
-                console.log("abc", tabId);
                 if(code !== null && tab.tabID === tabId){
                     editorRef.current.setValue(code);
                 }

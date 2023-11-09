@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { useLocation, useNavigate, Navigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, Navigate, useParams } from 'react-router-dom';
+import ReactDOM from 'react-dom/client';
 import Client from '../components/Client';
 import Tab from '../components/Tab';
 import Editor from '../components/Editor';
@@ -8,7 +9,7 @@ import { AiOutlinePlus } from "react-icons/ai";
 import { initSocket } from '../socket';
 import ACTIONS from '../Actions';
 import toast from 'react-hot-toast';
-
+import {v4 as uuidV4} from 'uuid';
 
 const EditorPage = () => {
   const socketRef = useRef(null);
@@ -19,11 +20,7 @@ const EditorPage = () => {
   const [show, setShow] = useState(true);
   const [clients, setClients] = useState([]);
 
-  const [tabs, setTabs] = useState([
-    { tabID: '10', title: 'Tab ABC', type: 'xml', value: `<h1 classname='welcome'>Hello<h1>`, createdByUser: 1 /* socketID */ },
-    { tabID: '20', title: 'Tab B', type: 'css', value: `.welcome{ color: red}`, createdByUser: 1 /* socketID */ },
-    { tabID: '30', title: 'Tab C', type: 'javascript', value: `document.getElementByClassname('welcome').style.color = 'green'`, createdByUser: 1 /* socketID */ },
-  ]);
+  const [tabs, setTabs] = useState([]);
 
   const [oneTab, setOneTab] = useState(tabs[0]);
 
@@ -51,14 +48,28 @@ const EditorPage = () => {
       socketRef.current.on(ACTIONS.JOINED, ({ clients, username, socketId }) => {
         if (username !== location.state?.username) {
           toast.success(`${username} joined room`);
-          console.log(username, 'Joined room');
         }
         setClients(clients);
+
+        //SYNC TABS
+        socketRef.current.emit(ACTIONS.SYNC_TABS, {
+          socketId,
+          roomId,
+          tab: null,
+        });
+
+        //SYCN CODE
         socketRef.current.emit(ACTIONS.SYNC_CODE, {
           code: codeRef.current,
           socketId,
-          tabId: oneTab.tabID,
+          // tabId: oneTab.tabID,
         });
+      });
+
+      /*Listening for GETTING TABS*/
+      socketRef.current.on(ACTIONS.GET_TABS, ({ tabs }) => {
+        console.log(tabs);
+        setTabs(tabs);
       });
 
       /*Listening for DISCONNECTED */
@@ -97,18 +108,55 @@ const EditorPage = () => {
     }
   }, []);
 
+
+
+
+  /*****************************  *************** ****************************************** */
   /*****************************  CONFIG FRONTEND ****************************************** */
+  /*****************************  *************** ****************************************** */
   /*Show Editor function */
-  function showEditor(tab) {
+  function showEditor(socketRef, tabId) {
     /* Show Editor */
-    setShow(true);
-    setOneTab(tab);
+    // setShow(true);
+    // setOneTab(tab);
+
+    console.log({
+      roomId,
+      tabId,
+      socketId: socketRef.current.id,
+    });
+
+    socketRef.current.emit(ACTIONS.GET_TAB, {
+      roomId,
+      tabId,
+      socketId: socketRef.current.id,
+    });
+
+    socketRef.current.on(ACTIONS.GET_TAB, ({tab}) => {
+      console.log(tab);
+      const editorSpace = ReactDOM.createRoot(document.getElementsByClassName('editorSpace')[0]); 
+      console.log(editorSpace);
+      editorSpace.render(
+        <Editor 
+          socketRef={socketRef} 
+          roomId={roomId} 
+          tab={tab} 
+          onCodeChange={(code) =>{
+            codeRef.current = code;
+          }
+        }/>
+      );
+    });
+
+    
+    
+
   }
 
   /*Hide Editor function */
   function hideEditor(tab) {
     /* Show Editor */
-    setShow(false);
+    // setShow(false);
     setOneTab(tab);
   }
 
@@ -140,18 +188,20 @@ const EditorPage = () => {
 
   /* Handle Click */
   function handleClick(e) {
-    if (e.target.className === 'editorSidebar' || e.target.className === 'btn createTabBtn'
-      || e.target.tagName === 'svg' || e.target.tagName === 'path') {
+
+    if (e.target.className === 'editorSidebar' || e.target.tagName === 'path') {
       return;
+    }
+    else if (e.target.className === 'btn createTabBtn'|| e.target.id === 'createTab-icon' 
+      || e.target.id === 'closeTab-icon' || e.target.className === 'closeTabBtn'){
+      closeOrNewTab(e);
     }
     else {
       activeTab(e);
 
       /*find current tabID and tab data*/
       const tabID = e.target.closest('div').id;
-      const tab = (tabs.find((tab) => tab.tabID === tabID));
-
-      showEditor(tab);
+      showEditor(socketRef, tabID);
     }
   }
 
@@ -169,7 +219,66 @@ const EditorPage = () => {
       }
     };
   }, []);
-  /***************************** #END CONFIG FRONTEND ************************************** */
+  
+  /*Close and New Tab */
+  function closeOrNewTab(e){
+    if(e.target.id === 'closeTab-icon' || e.target.className === 'closeTabBtn'){
+      const closeTabId = e.target.closest('div').id;
+      /*Send REMOVE_TAB*/
+      socketRef.current.emit(ACTIONS.REMOVE_TAB, {
+        roomId,
+        tabId: closeTabId,
+      });
+      console.log('close tab', closeTabId)
+    }
+
+    else if(e.target.id === 'createTab-icon' || e.target.className === 'btn createTabBtn' ){
+
+      toast((t) => (
+        <div>
+          <input id="tabName" type="text" placeholder="Enter Tag Name"/>
+          <select name="Type:" id="chooseType">
+            <option value="xml">HTML</option>
+            <option value="javascript">JS</option>
+            <option value="css">CSS</option>
+          </select>
+          <button onClick={
+            () => {
+              let tabName = document.getElementById('tabName').value;
+              if(tabName.length !== 0){
+                let type = document.getElementById('chooseType').value;
+                let tab = {
+                  roomId, tabID: uuidV4().toString(), title: tabName, type, value: `new tab`, createdByUser: socketRef.current.id /* socketID */ 
+                }
+
+                /*Send ADD_TAB*/
+                socketRef.current.emit(ACTIONS.ADD_TAB, {
+                  roomId,
+                  tab,
+                });
+
+                toast.dismiss(t.id);
+              }
+              else {
+                document.getElementById('tabName').placeholder = "Please enter a tab name!";
+                document.getElementById('tabName').style = 'border: 2px solid red;';
+              }
+            }
+          }>New</button>
+        </div>
+      ));
+    }
+
+    else{
+      return ;
+    }
+  }
+  /*****************************  *************** ****************************************** *
+   *****************************  END CONFIG FRONTEND ************************************** *
+   *****************************  *************** ****************************************** */
+
+
+
 
   async function coppyRoomId(){
     try {
@@ -212,18 +321,28 @@ const EditorPage = () => {
             ))
           }
           <div className='tagCreate'>
-            <button className="btn createTabBtn"><AiOutlinePlus /></button>
+            <button className="btn createTabBtn"><AiOutlinePlus id="createTab-icon"/></button>
           </div>
         </div>
         <div className="editorSpace">
-          {show ? <Editor 
+          {/* {show ? <Editor 
                     socketRef={socketRef} 
                     roomId={roomId} 
                     tab={oneTab} 
                     onCodeChange={(code) =>{
                       codeRef.current = code;
                     }
-          }/> : null}
+          }/> : null} */}
+
+          {/* <Editor 
+            socketRef={socketRef} 
+            roomId={roomId} 
+            tab={oneTab} 
+            onCodeChange={(code) =>{
+              codeRef.current = code;
+            }
+          }/> */}
+
         </div>
       </div>
     </div>

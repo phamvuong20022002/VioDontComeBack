@@ -22,7 +22,7 @@ const Tab = (tabContent) => {
                 <span className="tabTitle">
                     {tabContent.tab.title + "." + typeToTail(tabContent.tab.type).tail}
                 </span>
-                <span className="closeTabBtn"><VscChromeClose /></span>
+                <span className="closeTabBtn"><VscChromeClose id="closeTab-icon" /></span>
             </div>
         </div>
     );
