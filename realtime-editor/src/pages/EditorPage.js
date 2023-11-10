@@ -13,7 +13,7 @@ import {v4 as uuidV4} from 'uuid';
 
 const EditorPage = () => {
   const socketRef = useRef(null);
-  const codeRef = useRef(null);
+  const codeRef = useRef('');
   const location = useLocation();
   const reactNavigator = useNavigate();
   const { roomId } = useParams();
@@ -23,6 +23,8 @@ const EditorPage = () => {
   const [tabs, setTabs] = useState([]);
 
   const [oneTab, setOneTab] = useState(tabs[0]);
+
+  var editorSpace = null;
 
   /*Create Socket for Sending and Listening Actions */
   useEffect(() => {
@@ -58,17 +60,16 @@ const EditorPage = () => {
           tab: null,
         });
 
-        //SYCN CODE
-        socketRef.current.emit(ACTIONS.SYNC_CODE, {
-          code: codeRef.current,
-          socketId,
-          // tabId: oneTab.tabID,
-        });
+        // //SYNC CODE
+        // socketRef.current.emit(ACTIONS.SYNC_CODE, {
+        //   code: codeRef.current,
+        //   socketId,
+        //   // tabId: oneTab.tabID,
+        // });
       });
 
       /*Listening for GETTING TABS*/
       socketRef.current.on(ACTIONS.GET_TABS, ({ tabs }) => {
-        console.log(tabs);
         setTabs(tabs);
       });
 
@@ -114,17 +115,49 @@ const EditorPage = () => {
   /*****************************  *************** ****************************************** */
   /*****************************  CONFIG FRONTEND ****************************************** */
   /*****************************  *************** ****************************************** */
-  /*Show Editor function */
+  
+  /*Get TabID and Code from CodeRef */
+  function getTabIDAndCode(data) {
+    let tabId = data.substring(0, data.indexOf('|'));
+    let code = data.substring(data.indexOf('|') + 1);
+    return {tabId, code}
+  }
+
+  /*Render Editor function */
+  function renderEditor(tab) {
+    if(editorSpace !== null){
+      editorSpace.unmount();
+    }
+    editorSpace = ReactDOM.createRoot(
+      document.getElementsByClassName("editorSpace")[0]
+    );
+    let data = getTabIDAndCode(codeRef.current);
+    //SYNC CODE
+    socketRef.current.emit(ACTIONS.SYNC_CODE, {
+      roomId,
+      saveTabId: data.tabId,
+      code: data.code,
+      socketId: socketRef.current.id,
+      tabId: tab.tabID,
+    });
+
+    editorSpace.render(
+      <Editor
+        socketRef={socketRef}
+        roomId={roomId}
+        tab={tab}
+        onCodeChange={(code) => {
+          codeRef.current = code;
+        }}
+      />
+    );
+  
+  }
+
   function showEditor(socketRef, tabId) {
     /* Show Editor */
     // setShow(true);
     // setOneTab(tab);
-
-    console.log({
-      roomId,
-      tabId,
-      socketId: socketRef.current.id,
-    });
 
     socketRef.current.emit(ACTIONS.GET_TAB, {
       roomId,
@@ -133,24 +166,14 @@ const EditorPage = () => {
     });
 
     socketRef.current.on(ACTIONS.GET_TAB, ({tab}) => {
-      console.log(tab);
-      const editorSpace = ReactDOM.createRoot(document.getElementsByClassName('editorSpace')[0]); 
-      console.log(editorSpace);
-      editorSpace.render(
-        <Editor 
-          socketRef={socketRef} 
-          roomId={roomId} 
-          tab={tab} 
-          onCodeChange={(code) =>{
-            codeRef.current = code;
-          }
-        }/>
-      );
+      // const editorSpace = document.getElementsByClassName('editorSpace')[0];
+      // const editorID = editorSpace.getElementsByTagName('textarea')[0];
+      // console.log(editorID);
+  
+      renderEditor(tab);
     });
 
     
-    
-
   }
 
   /*Hide Editor function */
@@ -229,7 +252,6 @@ const EditorPage = () => {
         roomId,
         tabId: closeTabId,
       });
-      console.log('close tab', closeTabId)
     }
 
     else if(e.target.id === 'createTab-icon' || e.target.className === 'btn createTabBtn' ){

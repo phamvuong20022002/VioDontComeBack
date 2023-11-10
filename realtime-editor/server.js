@@ -113,8 +113,18 @@ io.on('connection',(socket)=>{
     });
 
     //SYNC CODE
-    socket.on(ACTIONS.SYNC_CODE, ({socketId, tabId, code}) => {
-        io.to(socketId).emit(ACTIONS.CODE_CHANGE, {tabId, code});
+    socket.on(ACTIONS.SYNC_CODE, ({roomId, saveTabId, tabId, code, socketId}) => {
+        console.log('SYNC CODE', code.length);
+        if(code !== null && code.length !== 0) {
+            let tabs = getAllTabs(roomId);
+            let tab = tabs.find(tab => (tab.tabID === saveTabId) && (tab.roomId === roomId));
+            tab.value = code
+            console.log(tabs.find(tab => (tab.tabID === saveTabId) && (tab.roomId === roomId)));
+        }
+        // let tabs = getAllTabs()
+        let tab = getAllTabs(roomId).find(tab => (tab.tabID === tabId) && (tab.roomId === roomId));
+        console.log("ABC", tab);
+        io.to(socketId).emit(ACTIONS.CODE_CHANGE, {tabId, code: tab.value});
     });
 
     //DISCONNECTING
