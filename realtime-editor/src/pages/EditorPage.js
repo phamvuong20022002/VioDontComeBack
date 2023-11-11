@@ -10,6 +10,7 @@ import { initSocket } from '../socket';
 import ACTIONS from '../Actions';
 import toast from 'react-hot-toast';
 import {v4 as uuidV4} from 'uuid';
+import {templateSaveCode} from '../assets/alerts/templateSaveCode.js';
 
 const EditorPage = () => {
   const socketRef = useRef(null);
@@ -312,7 +313,7 @@ const EditorPage = () => {
   };
 
   function leaveRoom(){
-    reactNavigator('/');
+    templateSaveCode(reactNavigator);
   };
 
   return (

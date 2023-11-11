@@ -18,8 +18,6 @@ const io = new Server(server);
 const userSocketMap = {};
 const tabsData = [];
 
-console.log(getAllTabs(''));
-
 function getAllConnectedClients(roomId){
     return Array.from(io.sockets.adapter.rooms.get(roomId) || []).map((socketId)=>{
         return{
@@ -58,9 +56,9 @@ io.on('connection',(socket)=>{
         if(getAllTabs(roomId).length === 0){
             tabsData.push
             (
-                {roomId, tabID: '10', title: 'Tab A', type: 'xml', value: `<h1 classname='welcome'>Hello<h1>`, createdByUser: socketId /* socketID */ },
-                {roomId, tabID: '20', title: 'Tab B', type: 'css', value: `.welcome{ color: red}`, createdByUser: socketId /* socketID */ },
-                {roomId, tabID: '30', title: 'Tab C', type: 'javascript', value: `document.getElementByClassname('welcome').style.color = 'green'`, createdByUser: socketId /* socketID */ },
+                {roomId, tabID: '10', title: 'index', type: 'xml', value: `<h1 classname='welcome'>Hello<h1>`, createdByUser: socketId /* socketID */ },
+                {roomId, tabID: '20', title: 'index', type: 'css', value: `.welcome{ color: red}`, createdByUser: socketId /* socketID */ },
+                {roomId, tabID: '30', title: 'index', type: 'javascript', value: `document.getElementByClassname('welcome').style.color = 'green'`, createdByUser: socketId /* socketID */ },
             )
         }
         let tabs = getAllTabs(roomId);
@@ -83,9 +81,6 @@ io.on('connection',(socket)=>{
     //REMOVE TAB
     socket.on(ACTIONS.REMOVE_TAB, ({roomId, tabId}) => {
         if(io.sockets.adapter.rooms.has(roomId)) {
-            // tabsData = tabsData.filter(function( obj ) {
-            //     return (obj.roomId === roomId && obj.tabID !== tabId);
-            // });
             for (let i = 0; i < tabsData.length; i++) {
                 let el = tabsData[i];
                 if(el.roomId === roomId && el.tabID === tabId){
@@ -114,16 +109,19 @@ io.on('connection',(socket)=>{
 
     //SYNC CODE
     socket.on(ACTIONS.SYNC_CODE, ({roomId, saveTabId, tabId, code, socketId}) => {
-        console.log('SYNC CODE', code.length);
+        //SAVE CODE
+        
         if(code !== null && code.length !== 0) {
             let tabs = getAllTabs(roomId);
             let tab = tabs.find(tab => (tab.tabID === saveTabId) && (tab.roomId === roomId));
-            tab.value = code
-            console.log(tabs.find(tab => (tab.tabID === saveTabId) && (tab.roomId === roomId)));
+
+            // IF TAB !== UNDEFINED
+            if(tab !== undefined) {
+                tab.value = code
+            }
         }
-        // let tabs = getAllTabs()
+        // SEND CODE
         let tab = getAllTabs(roomId).find(tab => (tab.tabID === tabId) && (tab.roomId === roomId));
-        console.log("ABC", tab);
         io.to(socketId).emit(ACTIONS.CODE_CHANGE, {tabId, code: tab.value});
     });
 
