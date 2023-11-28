@@ -151,9 +151,25 @@ input:focus::placeholder {
   background: #9b9b9b;
 }
 
+
+.editorContent {
+  display: flex;
+  max-width: 100%;
+  /* grid-template-columns: 50% 0.2% 50%; */
+  /* overflow: hidden; */
+}
+
+/* .editorSpace{
+  margin-right: 29px; 
+  padding-right: 0px; 
+  padding-bottom: 0px;
+} */
+
 .CodeMirror {
-  min-height: 94vh;
+  min-height: 93.8vh;
+  max-width: 150vh;
   font-size: 16px;
+  box-sizing: border-box;
 }
 
 .editorSidebar{
@@ -221,3 +237,81 @@ input:focus::placeholder {
 }
 
 
+/*OUTPUT SPACE*/
+.editorContent .separator{
+  background-color: #39464e;
+  position: relative;
+  cursor: col-resize;
+  width: 3px;
+}
+.outputSpace{
+  width: 60%;
+  border: 3px solid #282a36;
+  /* display: flex; */
+  /* border-top: 3px solid red; */
+}
+
+.outputContainer{
+  /* display: block; */
+}
+
+.outputTaskbar{
+  display: grid;
+  grid-template-columns: 20% 60% 20%;
+  background: #1c1e29;
+  border-bottom: 1px solid #424242;
+  color: #eee;
+  height: 40px;
+  width: 100%;
+}
+
+.consoleTaskbar{
+  display: flex;
+  /* grid-template-columns: 20% 60% 20%; */
+  background: #1c1e29;
+  border-bottom: 1px solid #424242;
+  color: #eee;
+  height: 40px;
+  width: 100%;
+  align-items: center;
+}
+
+.consoleTitle{
+  text-align: center;
+  width: 100%;
+  padding-left: 30px;
+}
+
+.outputTitle {
+  text-align: center;
+  padding-top: 10px;
+}
+
+.rightIcon{
+  /* margin-left: 25%; */
+  display: flex;
+  justify-content: right;
+  padding-right: 10px;
+}
+
+.outputIcon{
+  font-size: 18px;
+  padding-left: 5px;
+  padding-top: 10px;
+  cursor: pointer;
+}
+
+.outputIcon:hover{
+  color: #9b9b9b;
+}
+
+.outputMonitor{
+  max-height: 100vh;
+  height: 50vh;
+  width: 99%;
+}
+
+#consoleContainer{
+  background-color: #004aad;
+  width: 100%;
+}

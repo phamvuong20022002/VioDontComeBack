@@ -4,13 +4,15 @@ import ReactDOM from 'react-dom/client';
 import Client from '../components/Client';
 import Tab from '../components/Tab';
 import Editor from '../components/Editor';
+import Output from '../components/Output';
 // import Editor_v2 from '../components/Editor_v2';
 import { AiOutlinePlus } from "react-icons/ai";
 import { initSocket } from '../socket';
 import ACTIONS from '../Actions';
 import toast from 'react-hot-toast';
-import {v4 as uuidV4} from 'uuid';
-import {templateSaveCode} from '../assets/alerts/templateSaveCode.js';
+import { v4 as uuidV4 } from 'uuid';
+import { templateSaveCode } from '../assets/alerts/templateSaveCode.js';
+import { simpledrag } from '../assets/panel_gutter/simpledrag.js';
 
 const EditorPage = () => {
   const socketRef = useRef(null);
@@ -18,7 +20,6 @@ const EditorPage = () => {
   const location = useLocation();
   const reactNavigator = useNavigate();
   const { roomId } = useParams();
-  const [show, setShow] = useState(true);
   const [clients, setClients] = useState([]);
 
   const [tabs, setTabs] = useState([]);
@@ -75,7 +76,7 @@ const EditorPage = () => {
       });
 
       /*Listening for DISCONNECTED */
-      socketRef.current.on(ACTIONS.DISCONNECTED, ({socketId, username}) => {
+      socketRef.current.on(ACTIONS.DISCONNECTED, ({ socketId, username }) => {
         toast(`${username} left the room.`, {
           icon: '🏃‍♂️',
         });
@@ -93,14 +94,14 @@ const EditorPage = () => {
     if (!location.state) {
       toast.error("Please enter an USERNAME and try to join again!");
       // Redirect to HomePage
-      reactNavigator('/',{
-          state: {
-              roomId,
-          },
+      reactNavigator('/', {
+        state: {
+          roomId,
+        },
       })
       return;
     }
-    else{
+    else {
       init();
     }
     return () => {
@@ -116,17 +117,17 @@ const EditorPage = () => {
   /*****************************  *************** ****************************************** */
   /*****************************  CONFIG FRONTEND ****************************************** */
   /*****************************  *************** ****************************************** */
-  
+
   /*Get TabID and Code from CodeRef */
   function getTabIDAndCode(data) {
     let tabId = data.substring(0, data.indexOf('|'));
     let code = data.substring(data.indexOf('|') + 1);
-    return {tabId, code}
+    return { tabId, code }
   }
 
   /*Render Editor function */
   function renderEditor(tab) {
-    if(editorSpace !== null){
+    if (editorSpace !== null) {
       editorSpace.unmount();
     }
     editorSpace = ReactDOM.createRoot(
@@ -152,7 +153,7 @@ const EditorPage = () => {
         }}
       />
     );
-  
+
   }
 
   function showEditor(socketRef, tabId) {
@@ -166,15 +167,15 @@ const EditorPage = () => {
       socketId: socketRef.current.id,
     });
 
-    socketRef.current.on(ACTIONS.GET_TAB, ({tab}) => {
+    socketRef.current.on(ACTIONS.GET_TAB, ({ tab }) => {
       // const editorSpace = document.getElementsByClassName('editorSpace')[0];
       // const editorID = editorSpace.getElementsByTagName('textarea')[0];
       // console.log(editorID);
-  
+
       renderEditor(tab);
     });
 
-    
+
   }
 
   /*Hide Editor function */
@@ -216,8 +217,8 @@ const EditorPage = () => {
     if (e.target.className === 'editorSidebar' || e.target.tagName === 'path') {
       return;
     }
-    else if (e.target.className === 'btn createTabBtn'|| e.target.id === 'createTab-icon' 
-      || e.target.id === 'closeTab-icon' || e.target.className === 'closeTabBtn'){
+    else if (e.target.className === 'btn createTabBtn' || e.target.id === 'createTab-icon'
+      || e.target.id === 'closeTab-icon' || e.target.className === 'closeTabBtn') {
       closeOrNewTab(e);
     }
     else {
@@ -243,10 +244,10 @@ const EditorPage = () => {
       }
     };
   }, []);
-  
+
   /*Close and New Tab */
-  function closeOrNewTab(e){
-    if(e.target.id === 'closeTab-icon' || e.target.className === 'closeTabBtn'){
+  function closeOrNewTab(e) {
+    if (e.target.id === 'closeTab-icon' || e.target.className === 'closeTabBtn') {
       const closeTabId = e.target.closest('div').id;
       /*Send REMOVE_TAB*/
       socketRef.current.emit(ACTIONS.REMOVE_TAB, {
@@ -255,11 +256,11 @@ const EditorPage = () => {
       });
     }
 
-    else if(e.target.id === 'createTab-icon' || e.target.className === 'btn createTabBtn' ){
+    else if (e.target.id === 'createTab-icon' || e.target.className === 'btn createTabBtn') {
 
       toast((t) => (
         <div>
-          <input id="tabName" type="text" placeholder="Enter Tag Name"/>
+          <input id="tabName" type="text" placeholder="Enter Tag Name" />
           <select name="Type:" id="chooseType">
             <option value="xml">HTML</option>
             <option value="javascript">JS</option>
@@ -268,10 +269,10 @@ const EditorPage = () => {
           <button onClick={
             () => {
               let tabName = document.getElementById('tabName').value;
-              if(tabName.length !== 0){
+              if (tabName.length !== 0) {
                 let type = document.getElementById('chooseType').value;
                 let tab = {
-                  roomId, tabID: uuidV4().toString(), title: tabName, type, value: `new tab`, createdByUser: socketRef.current.id /* socketID */ 
+                  roomId, tabID: uuidV4().toString(), title: tabName, type, value: `new tab`, createdByUser: socketRef.current.id /* socketID */
                 }
 
                 /*Send ADD_TAB*/
@@ -292,8 +293,8 @@ const EditorPage = () => {
       ));
     }
 
-    else{
-      return ;
+    else {
+      return;
     }
   }
   /*****************************  *************** ****************************************** *
@@ -303,7 +304,7 @@ const EditorPage = () => {
 
 
 
-  async function coppyRoomId(){
+  async function coppyRoomId() {
     try {
       await navigator.clipboard.writeText(roomId);
       toast.success('Room ID has been coppied to your clipboard');
@@ -312,9 +313,53 @@ const EditorPage = () => {
     };
   };
 
-  function leaveRoom(){
+  function leaveRoom() {
     templateSaveCode(reactNavigator);
   };
+
+
+  useEffect(() => {
+    simpledrag()
+
+    var leftPane = document.getElementById('left-panel');
+    var rightPane = document.getElementById('right-panel');
+    var paneSep = document.getElementById('separator');
+
+    // The script below constrains the target to move horizontally between a left and a right virtual boundaries.
+    // - the left limit is positioned at 10% of the screen width
+    // - the right limit is positioned at 90% of the screen width
+    var leftLimit = 20;
+    var rightLimit = 70;
+
+
+    paneSep.sdrag(function (el, pageX, startX, pageY, startY, fix) {
+
+        fix.skipX = true;
+
+        if (pageX < window.innerWidth * leftLimit / 100) {
+            pageX = window.innerWidth * leftLimit / 100;
+            fix.pageX = pageX;
+        }
+        if (pageX > window.innerWidth * rightLimit / 100) {
+            pageX = window.innerWidth * rightLimit / 100;
+            fix.pageX = pageX;
+        }
+
+        var cur = pageX / window.innerWidth * 100;
+        if (cur < 0) {
+            cur = 0;
+        }
+        if (cur > window.innerWidth) {
+            cur = window.innerWidth;
+        }
+
+
+        var right = (100-cur-2);
+        leftPane.style.width = cur + '%';
+        rightPane.style.width = right + '%';
+
+    }, null, 'horizontal');
+  },[])
 
   return (
     <div className="mainWrap">
@@ -337,6 +382,7 @@ const EditorPage = () => {
       </div>
 
       <div className="editorWrap">
+        {/* Side Bar */}
         <div className="editorSidebar">
           {
             tabs.map(tab => (
@@ -344,29 +390,23 @@ const EditorPage = () => {
             ))
           }
           <div className='tagCreate'>
-            <button className="btn createTabBtn"><AiOutlinePlus id="createTab-icon"/></button>
+            <button className="btn createTabBtn"><AiOutlinePlus id="createTab-icon" /></button>
           </div>
         </div>
-        <div className="editorSpace">
-          {/* {show ? <Editor 
-                    socketRef={socketRef} 
-                    roomId={roomId} 
-                    tab={oneTab} 
-                    onCodeChange={(code) =>{
-                      codeRef.current = code;
-                    }
-          }/> : null} */}
 
-          {/* <Editor 
-            socketRef={socketRef} 
-            roomId={roomId} 
-            tab={oneTab} 
-            onCodeChange={(code) =>{
-              codeRef.current = code;
-            }
-          }/> */}
+        {/* Content */}
+        <div className="editorContent">
+          {/* Space */}
+          <div className="editorSpace" id="left-panel"></div>
 
+          <div class="separator" id="separator"></div>
+
+          {/* Output */}
+          <div className="outputSpace" id="right-panel">
+            <Output/>
+          </div>
         </div>
+
       </div>
     </div>
 
