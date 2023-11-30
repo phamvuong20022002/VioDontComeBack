@@ -263,6 +263,7 @@ input:focus::placeholder {
   color: #eee;
   height: 40px;
   width: 100%;
+  align-items: center;
 }
 
 .consoleTaskbar{
@@ -284,7 +285,6 @@ input:focus::placeholder {
 
 .outputTitle {
   text-align: center;
-  padding-top: 10px;
 }
 
 .rightIcon{
@@ -297,8 +297,8 @@ input:focus::placeholder {
 .outputIcon{
   font-size: 18px;
   padding-left: 5px;
-  padding-top: 10px;
   cursor: pointer;
+  transition: all 0.3s ease-in-out;
 }
 
 .outputIcon:hover{
@@ -314,4 +314,9 @@ input:focus::placeholder {
 #consoleContainer{
   background-color: #004aad;
   width: 100%;
+}
+
+.rotate-90 {
+  transform: rotate(90deg);
+  transition: transform 0.3s ease; /* Optional: Adds a smooth transition */
 }

@@ -371,8 +371,8 @@ const EditorPage = () => {
           <h3>Connected</h3>
           <div className="clientsList">
             {
-              clients.map(client => (
-                <Client key={client.socketID} username={client.username} />
+              clients.map((client, index) => (
+                <Client key={index} username={client.username} clientID={client.socketID}/>
               ))
             }
           </div>
