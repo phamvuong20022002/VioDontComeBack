@@ -21,10 +21,7 @@ const EditorPage = () => {
   const reactNavigator = useNavigate();
   const { roomId } = useParams();
   const [clients, setClients] = useState([]);
-
   const [tabs, setTabs] = useState([]);
-
-  const [oneTab, setOneTab] = useState(tabs[0]);
 
   var editorSpace = null;
 
@@ -109,7 +106,7 @@ const EditorPage = () => {
       socketRef.current.off(ACTIONS.JOIN);
       socketRef.current.off(ACTIONS.DISCONNECTED);
     }
-  }, []);
+  }, [socketRef]);
 
 
 
@@ -158,8 +155,6 @@ const EditorPage = () => {
 
   function showEditor(socketRef, tabId) {
     /* Show Editor */
-    // setShow(true);
-    // setOneTab(tab);
 
     socketRef.current.emit(ACTIONS.GET_TAB, {
       roomId,
@@ -176,13 +171,6 @@ const EditorPage = () => {
     });
 
 
-  }
-
-  /*Hide Editor function */
-  function hideEditor(tab) {
-    /* Show Editor */
-    // setShow(false);
-    setOneTab(tab);
   }
 
   /* Active tab function */
@@ -235,6 +223,7 @@ const EditorPage = () => {
     const sidebarElement = document.getElementsByClassName('editorSidebar')[0];
 
     if (sidebarElement) {
+      // create Editor Component when click on tab
       sidebarElement.addEventListener('click', handleClick);
     }
 
@@ -247,6 +236,7 @@ const EditorPage = () => {
 
   /*Close and New Tab */
   function closeOrNewTab(e) {
+
     if (e.target.id === 'closeTab-icon' || e.target.className === 'closeTabBtn') {
       const closeTabId = e.target.closest('div').id;
       /*Send REMOVE_TAB*/
@@ -317,7 +307,7 @@ const EditorPage = () => {
     templateSaveCode(reactNavigator);
   };
 
-
+  // add separator and drag events for panels
   useEffect(() => {
     simpledrag()
 
@@ -399,11 +389,11 @@ const EditorPage = () => {
           {/* Space */}
           <div className="editorSpace" id="left-panel"></div>
 
-          <div class="separator" id="separator"></div>
+          <div className="separator" id="separator"></div>
 
           {/* Output */}
           <div className="outputSpace" id="right-panel">
-            <Output/>
+            {socketRef.current !== null && <Output socketRef={socketRef} roomId={roomId}/>}
           </div>
         </div>
 

@@ -56,9 +56,9 @@ io.on('connection',(socket)=>{
         if(getAllTabs(roomId).length === 0){
             tabsData.push
             (
-                {roomId, tabID: '10', title: 'index', type: 'xml', value: `<h1 classname='welcome'>Hello<h1>`, createdByUser: socketId /* socketID */ },
-                {roomId, tabID: '20', title: 'index', type: 'css', value: `.welcome{ color: red}`, createdByUser: socketId /* socketID */ },
-                {roomId, tabID: '30', title: 'index', type: 'javascript', value: `document.getElementByClassname('welcome').style.color = 'green'`, createdByUser: socketId /* socketID */ },
+                {roomId, tabID: '10', title: 'index', type: 'xml', value: `<h1 class="welcome">Hello World</h1>`, createdByUser: socketId /* socketID */ },
+                {roomId, tabID: '20', title: 'index', type: 'css', value: `body{\n background: white; \n} \n.welcome{ color: red; text-align: center;}`, createdByUser: socketId /* socketID */ },
+                {roomId, tabID: '30', title: 'index', type: 'javascript', value: `let welcomeClass = document.getElementsByClassName('welcome')[0];\nif(welcomeClass){\n    welcomeClass.style.color = 'green';\n}`, createdByUser: socketId /* socketID */ },
             )
         }
         let tabs = getAllTabs(roomId);
@@ -123,6 +123,21 @@ io.on('connection',(socket)=>{
         // SEND CODE
         let tab = getAllTabs(roomId).find(tab => (tab.tabID === tabId) && (tab.roomId === roomId));
         io.to(socketId).emit(ACTIONS.CODE_CHANGE, {tabId, code: tab.value});
+    });
+
+    //REQUEST-RECEIVE CODE 
+    socket.on(ACTIONS.REQUEST_CODE, ({roomId, data, socketId}) => {
+        let dataResponse = [];
+        const tabs = getAllTabs(roomId);
+        
+        data.forEach(tabId => {
+            let tab = tabs.find(tab => (tab.tabID === tabId));
+            dataResponse.push(tab);
+        })
+        //RESPONSE AN ARRAY
+        if(dataResponse.length > 0){
+            io.to(socketId).emit(ACTIONS.RECEIVE_CODE, { data: dataResponse});
+        }
     });
 
     //DISCONNECTING

@@ -14,70 +14,29 @@ import {
 } from "react-icons/vsc";
 import { TfiReload } from "react-icons/tfi";
 import SelectInput from "../assets/select_input/SelectInput";
+import ACTIONS from "../Actions";
 
 const initTabsTemplate = [
   {tabID: '10', title: 'index.html'},
   {tabID: '20', title: 'index.css'},
   {tabID: '30', title: 'index.js'},
 ]
-
-
 const initTabIDsTemplate = ['10', '20', '30']
 
-const Output = () => {
-  const [htmlCode, setHtmlCode] = useState("");
-  const [cssCode, setCssCode] = useState("");
-  const [jsCode, setJsCode] = useState("");
+const initHTMLContent = "<html><head></head><body>Hello, iframe content!</body></html>"
+
+const Output = ({socketRef, roomId}) => {
   const [displaySelect, setDisplaySelect] = useState(false);
   const [tabs, setTabs] = useState([]);
   const [selectedTabs, setSelectedTabs] = useState(initTabIDsTemplate);
-  
-  const [previewFrame, setPreviewFrame] = useState("");
-
-  const htmlCodeExample = `
-        <h1 id="header"></h1>
-        <button onclick="myfunc()"></button>
-    `;
-
-    const cssCodeExample = `
-        body {
-            background-color: white;
-        }
-    `;
-
-  const jsCodeExample = `
-        const message = 'Hello world' // Try edit me
-
-        // Update header text
-        document.querySelector('#header').innerHTML = message
-        
-        function myfunc(){
-        console.log(message)
-        }
-    `;
-
-  // Build the HTML content
-  const htmlContent = `
-        <html>
-            <head>
-                <style>${cssCode}</style>
-            </head>
-            <body>
-                ${htmlCode}
-                <script>${jsCode}</script>
-            </body>
-        </html>
-    `;
+  const [previewFrame, setPreviewFrame] = useState(initHTMLContent);
 
   useEffect(() => {
-    setHtmlCode(htmlCodeExample);
-    setCssCode(cssCodeExample);
-    setJsCode(jsCodeExample);
-    setPreviewFrame(htmlContent);
-
     //add listening for Output button
     handleOutputBtn();
-  }, [previewFrame]);
+    //generate code for previewFrame
+    generateCode();
+  }, [previewFrame, selectedTabs, socketRef]);
 
 
     // toggle select from check boxs
@@ -108,13 +67,71 @@ const Output = () => {
     }
   };
 
-  function getCode(){
-    console.log('getCode',selectedTabs);
+  // Pre-ActionsCode have 'REQUEST or RECIEVE' pass parameters with 'data' from an array obj [{},{}...]
+  function getCodeWithSocket() {
+    return new Promise((resolve, reject) => {
+      // Request code from server
+      socketRef.current.emit(ACTIONS.REQUEST_CODE, {
+        roomId,
+        data: selectedTabs,
+        socketId: socketRef.current.id,
+      });
+  
+      // Listen for the code from the server
+      socketRef.current.on(ACTIONS.RECEIVE_CODE, ({ data }) => {
+        // Resolve the Promise with the received code
+        resolve(data);
+      });
+    });
   }
 
-  useEffect(() => {
-    getCode();
-  }, [selectedTabs]);
+  function getFileType(fileName) {
+    // Split the file name by the dot (.)
+    let splitFileName = fileName.split('.');
+  
+    // Get the last element from the split array (assuming it's the file extension)
+    let fileType = splitFileName[splitFileName.length - 1];
+  
+    return fileType;
+  }
+
+  function generateCode(){
+    if(selectedTabs.length === 0){
+      return;
+    }
+
+    // response is data array obj [{},{}...]
+    getCodeWithSocket().then((data) =>{
+      let cssValue ='';
+      let htmlValue ='';
+      let jsValue ='';
+      data.forEach((tab) =>{
+          if(tab.type === 'css'){
+            let tabStyle = `<style>${tab.value}</style>`;
+            cssValue += tabStyle;
+          }
+          else if(tab.type === 'xml'){
+            htmlValue += tab.value;
+          }
+          else{
+            let tabScript = `<script>${tab.value}</script>`;
+            jsValue += tabScript;
+          }
+      })
+      let htmlContent = `
+            <html>
+                <head>
+                    ${cssValue}
+                </head>
+                <body>
+                    ${htmlValue}
+                </body>
+                ${jsValue}
+            </html>
+          `;
+      setPreviewFrame(htmlContent);
+    });
+  }
 
   // Add tabs to select input form
   const addTabsToForm = () => {
@@ -159,14 +176,13 @@ const Output = () => {
       <div className="outputMonitor" id="newIframe">
         <iframe
             // src="http://localhost:3000"
-            allow-same-origin="true"
             id="monitor"
             srcDoc={previewFrame}
             title="output"
-            sandbox="allow-scripts"
+            sandbox="allow-same-origin allow-scripts"
             width="100%"
             height="100%"
-          />
+        ></iframe>
       </div>
 
       <div className="consoleTaskbar">

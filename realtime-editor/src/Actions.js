@@ -9,6 +9,8 @@ const ACTIONS = {
     ADD_TAB: 'add_tab',
     REMOVE_TAB: 'remove_tab',
     SYNC_CODE: 'sync_code',
+    REQUEST_CODE:'request_code',
+    RECEIVE_CODE:'receive_code',
     LEAVE: 'leave',
 };
 
