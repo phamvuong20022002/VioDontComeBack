@@ -8,6 +8,7 @@ const ACTIONS = {
     SYNC_TABS: 'sync_tabs',
     ADD_TAB: 'add_tab',
     REMOVE_TAB: 'remove_tab',
+    RENAME_TAB: 'rename_tab',
     SYNC_CODE: 'sync_code',
     REQUEST_CODE:'request_code',
     RECEIVE_CODE:'receive_code',

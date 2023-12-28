@@ -16,6 +16,8 @@ const io = new Server(server);
 // });
 
 const userSocketMap = {};
+
+// DB contains all tabs data
 const tabsData = [];
 
 function getAllConnectedClients(roomId){
@@ -94,6 +96,23 @@ io.on('connection',(socket)=>{
             io.to(socketId).emit(ACTIONS.GET_TABS, {tabs});
         });
     });
+
+    //RENAME TAB
+    socket.on(ACTIONS.RENAME_TAB, ({roomId, tabId, newTabName}) => {
+        if(io.sockets.adapter.rooms.has(roomId)) {
+            for (let i = 0; i < tabsData.length; i++) {
+                let el = tabsData[i];
+                if(el.roomId === roomId && el.tabID === tabId){
+                    el.title = newTabName;
+                }
+            }
+        }
+        const tabs = getAllTabs(roomId);
+        const clients = getAllConnectedClients(roomId);
+        clients.forEach(({socketId}) => {
+            io.to(socketId).emit(ACTIONS.GET_TABS, {tabs});
+        });
+    })
 
     //GET TAB
     socket.on(ACTIONS.GET_TAB, ({roomId, tabId, socketId}) => {

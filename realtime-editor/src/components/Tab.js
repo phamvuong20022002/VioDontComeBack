@@ -1,6 +1,7 @@
 import React from 'react';
 import { VscChromeClose } from "react-icons/vsc";
 
+
 const Tab = (tabContent) => {
 
     const typeToTail = (type) =>{

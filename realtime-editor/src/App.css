@@ -174,15 +174,19 @@ input:focus::placeholder {
 
 .editorSidebar{
   display: flex;
-  /* margin: 5px 5px; */
   border-bottom: 1px solid #424242;
+  max-width: 85vw;
+  overflow-x: hidden;
 }
 
+
+/* Tab Styles */
 .tabBtn{
   display: grid;
-  grid-template-columns: 25px 100px 30px;
-  height: 20px;
-  width: 150px;
+  grid-template-columns: 20% 50% 30%;
+  /* flex-direction: row; */
+  height: 19px;
+  width: 130px;
   font-size: 14px;
   border: 1px solid #424242;
   background: #1c1e29;
@@ -194,6 +198,7 @@ input:focus::placeholder {
 
 .tabBtn img{
   width: 20px;
+  margin-right: 8px;
 }
 
 .closeTabBtn {
@@ -204,7 +209,7 @@ input:focus::placeholder {
   border-radius: 2px;
   display: none;
   margin-bottom: 3px;
-  margin-left: 8px;
+  margin-left: 20px;
 }
 
 .tabBtn:hover{
@@ -219,6 +224,11 @@ input:focus::placeholder {
 .closeTabBtn:hover{
   padding: 3px 7px 7px 5px;
   background: #5271ff;
+}
+
+.tabContainer{
+  display: flex;
+  overflow-x: hidden;
 }
 
 .tabContainer .active{
@@ -236,6 +246,10 @@ input:focus::placeholder {
   background-color: #282a36;
 }
 
+.tabMenu{
+  top: 40px !important;
+}
+
 
 /*OUTPUT SPACE*/
 .editorContent .separator{
@@ -247,12 +261,16 @@ input:focus::placeholder {
 .outputSpace{
   width: 60%;
   border: 3px solid #282a36;
-  /* display: flex; */
+  /* display: flex;  */
   /* border-top: 3px solid red; */
+  height: 93.1vh;
 }
 
-.outputContainer{
-  /* display: block; */
+.outputContainer {
+  /* display: flex; */
+  /* flex-direction: column; */
+  height: 90vh;
+  max-height: 90vh;
 }
 
 .outputTaskbar{
@@ -261,7 +279,7 @@ input:focus::placeholder {
   background: #1c1e29;
   border-bottom: 1px solid #424242;
   color: #eee;
-  height: 40px;
+  height: 30px;
   width: 100%;
   align-items: center;
 }
@@ -272,7 +290,7 @@ input:focus::placeholder {
   background: #1c1e29;
   border-bottom: 1px solid #424242;
   color: #eee;
-  height: 40px;
+  height: 30px;
   width: 100%;
   align-items: center;
 }
@@ -306,17 +324,76 @@ input:focus::placeholder {
 }
 
 .outputMonitor{
-  max-height: 100vh;
-  height: 50vh;
-  width: 99%;
+  height: 80%;
+  width: 99.5%;
+  /* overflow-y: auto; */
+  border: none;
 }
 
-#consoleContainer{
-  background-color: #004aad;
+.consoleContainer{
+  background: #004aad;
+  max-height: 31.5vh;
   width: 100%;
+  overflow-y: auto;
+  /* margin-right: 10px; */
 }
+
+.consoleLine{
+  padding-left: 5px;
+  display: grid;
+  grid-template-columns: 80% 20%;
+}
+
+.consoleLine .log{
+  color: #99cc33;
+}
+
+.consoleLine .error{
+  color: red;
+}
+
+.consoleLine .warn{
+  color: #ffcc00;
+}
+
+.consoleLine .lineInfo{
+  text-align: center;
+  font-style: italic;
+  color: red;
+}
+
+.separator-output{
+  background-color: #39464e;
+  position: relative;
+  cursor: row-resize;
+  height: 3px;
+}
+
 
 .rotate-90 {
   transform: rotate(90deg);
   transition: transform 0.3s ease; /* Optional: Adds a smooth transition */
+}
+
+
+.gutter {
+  background-color: #eee;
+  background-repeat: no-repeat;
+  background-position: 50%;
+}
+
+.gutter.gutter-vertical {
+  /* margin-top: 5px; */
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAFAQMAAABo7865AAAABlBMVEVHcEzMzMzyAv2sAAAAAXRSTlMAQObYZgAAABBJREFUeF5jOAMEEAIEEFwAn3kMwcB6I2AAAAAASUVORK5CYII=');
+  cursor: row-resize;
+}
+
+.gutter.gutter-horizontal {
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==');
+  cursor: col-resize;
+}
+
+.container__top{
+  height: 100vh;
+  background-color: white;
 }

@@ -23,3 +23,16 @@ export const templateSaveCode = (reactNavigator) =>{
         return;
       });
 };
+
+
+export const templateCloseTab = async () => {
+  const result = await Swal.fire({
+    title: "<strong>Are you sure?</strong>",
+    icon: "warning",
+    html: "Code in this tab will be removed!",
+    showCancelButton: true,
+    denyButtonText: "Close tab",
+  });
+
+  return result;
+};

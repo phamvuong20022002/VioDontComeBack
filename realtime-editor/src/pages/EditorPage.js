@@ -11,8 +11,11 @@ import { initSocket } from '../socket';
 import ACTIONS from '../Actions';
 import toast from 'react-hot-toast';
 import { v4 as uuidV4 } from 'uuid';
-import { templateSaveCode } from '../assets/alerts/templateSaveCode.js';
-import { simpledrag } from '../assets/panel_gutter/simpledrag.js';
+import { templateSaveCode, templateCloseTab } from '../assets/alerts/templateSaveCode.js';
+import { setupPanel } from '../assets/panel_gutter/setupPanel.js';
+import Split from 'react-split';
+import VanillaContextMenu from 'vanilla-context-menu';
+
 
 const EditorPage = () => {
   const socketRef = useRef(null);
@@ -27,7 +30,7 @@ const EditorPage = () => {
 
   /*Create Socket for Sending and Listening Actions */
   useEffect(() => {
-    /* Create socket connection */
+    // Create socket connection
     const init = async () => {
       socketRef.current = await initSocket();
       socketRef.current.on('connect_error', (err) => handleErrors(err));
@@ -39,13 +42,13 @@ const EditorPage = () => {
         reactNavigator('/');
       };
 
-      /*Send JOIN sign*/
+      // Send JOIN sign
       socketRef.current.emit(ACTIONS.JOIN, {
         roomId,
         username: location.state?.username || 'anonymous',
       });
 
-      /*Listening for JOINED*/
+      // Listening for JOINED
       socketRef.current.on(ACTIONS.JOINED, ({ clients, username, socketId }) => {
         if (username !== location.state?.username) {
           toast.success(`${username} joined room`);
@@ -67,12 +70,12 @@ const EditorPage = () => {
         // });
       });
 
-      /*Listening for GETTING TABS*/
+      // Listening for GETTING TABS
       socketRef.current.on(ACTIONS.GET_TABS, ({ tabs }) => {
         setTabs(tabs);
       });
 
-      /*Listening for DISCONNECTED */
+      // Listening for DISCONNECTED 
       socketRef.current.on(ACTIONS.DISCONNECTED, ({ socketId, username }) => {
         toast(`${username} left the room.`, {
           icon: '🏃‍♂️',
@@ -87,7 +90,7 @@ const EditorPage = () => {
       return socketRef.current;
     };
 
-    /* Fix miss username when join room by a link*/
+    // Fix miss username when join room by a link
     if (!location.state) {
       toast.error("Please enter an USERNAME and try to join again!");
       // Redirect to HomePage
@@ -101,27 +104,20 @@ const EditorPage = () => {
     else {
       init();
     }
-    return () => {
-      socketRef.current.disconnect();
-      socketRef.current.off(ACTIONS.JOIN);
-      socketRef.current.off(ACTIONS.DISCONNECTED);
+    return async () => {
+      await socketRef.current.disconnect();
+      await socketRef.current.off(ACTIONS.JOIN);
+      await socketRef.current.off(ACTIONS.DISCONNECTED);
     }
   }, [socketRef]);
 
-
-
-
-  /*****************************  *************** ****************************************** */
-  /*****************************  CONFIG FRONTEND ****************************************** */
-  /*****************************  *************** ****************************************** */
-
+  /*----FUNCTION AREA----*/
   /*Get TabID and Code from CodeRef */
   function getTabIDAndCode(data) {
     let tabId = data.substring(0, data.indexOf('|'));
     let code = data.substring(data.indexOf('|') + 1);
     return { tabId, code }
   }
-
   /*Render Editor function */
   function renderEditor(tab) {
     if (editorSpace !== null) {
@@ -152,7 +148,7 @@ const EditorPage = () => {
     );
 
   }
-
+  /*Require Tad Data for Rendering Editor */
   function showEditor(socketRef, tabId) {
     /* Show Editor */
 
@@ -172,18 +168,16 @@ const EditorPage = () => {
 
 
   }
-
   /* Active tab function */
   function activeTab(e) {
     const currentTab = e.target.closest('div');
     const currentTabClassname = currentTab.className;
-
-    /* Don't add active style for actived tab */
+    // Don't add active style for actived tab
     if (currentTabClassname.search("active") !== -1) {
       return;
     };
 
-    /* Remove active style on tab*/
+    // Remove active style on tab
     let tabContainers = document.getElementsByClassName('tabContainer');
     Array.from(tabContainers).forEach(function (element) {
       let activeTab = element.querySelector('.active');
@@ -192,24 +186,30 @@ const EditorPage = () => {
         return;
       }
     });
-
-    /* Add active style */
+    
+    // Add active style 
     if (currentTab.className === 'btn tabBtn') {
       currentTab.classList.add('active');
     }
   }
-
-  /* Handle Click */
+  /* Add Handle Click On `editorSidebar` class*/
   function handleClick(e) {
-
-    if (e.target.className === 'editorSidebar' || e.target.tagName === 'path') {
+    //click  another element on editorSidebar
+    if (e.target.className === 'editorSidebar' || e.target.tagName === 'path'|| e.target.className === 'tabContainer') {
       return;
     }
-    else if (e.target.className === 'btn createTabBtn' || e.target.id === 'createTab-icon'
-      || e.target.id === 'closeTab-icon' || e.target.className === 'closeTabBtn') {
-      closeOrNewTab(e);
+    // click create button
+    else if (e.target.className === 'btn createTabBtn' || e.target.id === 'createTab-icon') {
+      // create a new tab
+      createNewTab();
+    }
+    //  click close button
+    else if (e.target.id === 'closeTab-icon' || e.target.className === 'closeTabBtn'){
+      //close the tab
+      closeTab(e);
     }
     else {
+      //add active on tab
       activeTab(e);
 
       /*find current tabID and tab data*/
@@ -217,7 +217,94 @@ const EditorPage = () => {
       showEditor(socketRef, tabID);
     }
   }
+  /*Create New Tab */
+  async function createNewTab() {
+    //Create new tab
+    const result = await toast((t) => (
+      <div>
+        <input id="tabName" type="text" placeholder="Enter Tag Name" />
+        
+        <select name="Type:" id="chooseType">
+          <option value="xml">HTML</option>
+          <option value="javascript">JS</option>
+          <option value="css">CSS</option>
+        </select>
 
+        <button onClick={() => {
+            let tabName = document.getElementById('tabName').value;
+            if (tabName.length !== 0) {
+              let type = document.getElementById('chooseType').value;
+              let tab = {
+                roomId, tabID: uuidV4().toString(), title: tabName, type, value: `new tab`, createdByUser: socketRef.current.id /* socketID */
+              }
+
+              /*Send ADD_TAB*/
+              socketRef.current.emit(ACTIONS.ADD_TAB, {
+              roomId,
+              tab,
+              });
+
+              toast.dismiss(t.id);
+            }
+            else {
+              document.getElementById('tabName').placeholder = "Please enter a tab name!";
+              document.getElementById('tabName').style = 'border: 2px solid red;';
+            }
+            }
+          }>
+          New
+        </button>
+      </div>
+    ));
+    return result;
+  }
+  /*Close and Remove tab data on server */
+  async function closeTab(e=null, tabID=null) {
+    // alert are you sure
+    const result = await templateCloseTab();
+    if (!result.isConfirmed) {
+      // User clicked "Cancel"
+      return;
+    }
+
+    // Close tab in event
+    if(e){
+      if (e.target.id === 'closeTab-icon' || e.target.className === 'closeTabBtn') {
+        // remove tab on server backend
+        const closeTabId = e.target.closest('div').id;
+        /*Send REMOVE_TAB*/
+        socketRef.current.emit(ACTIONS.REMOVE_TAB, {
+          roomId,
+          tabId: closeTabId,
+        });
+      }
+    }
+
+    // Close tab with tabID
+    if(tabID){
+      /*Send REMOVE_TAB*/
+      socketRef.current.emit(ACTIONS.REMOVE_TAB, {
+        roomId,
+        tabId: tabID,
+      });
+    }
+    
+  }
+  /*Coppy ID room button */
+  async function coppyRoomId() {
+    try {
+      await navigator.clipboard.writeText(roomId);
+      toast.success('Room ID has been coppied to your clipboard');
+    } catch (error) {
+      toast.error('Couldn not copy the Room ID');
+    };
+  };
+  /* Leave room button */
+  function leaveRoom() {
+    templateSaveCode(reactNavigator);
+  };
+
+  /*----USEEFFECT AREA----*/
   /*Add Event Listener for editor side bar  */
   useEffect(() => {
     const sidebarElement = document.getElementsByClassName('editorSidebar')[0];
@@ -233,123 +320,81 @@ const EditorPage = () => {
       }
     };
   }, []);
+  /*Add right click menu on tab */
+  useEffect(()=> {
+    const myMenu = [
+      {
+        label: 'Rename',
+        callback: async(e) => {
+          // Get TabID
+          let tabID = null;
+          if(e.target.id){
+            tabID = e.target.id
+          }
+          else {
+            tabID = e.target.closest('.tabBtn').id;
+          }
 
-  /*Close and New Tab */
-  function closeOrNewTab(e) {
+          // Create toast for input new tab name
+          toast((t) => (
+            <div>
+              <input id="newTabName" type="text" placeholder="Enter Tag Name" />
+              <button onClick={
+                () => {
+                  let newTabName = document.getElementById('newTabName').value;
+                  if ((newTabName.length !== 0) && tabID) {
+                    /*Send RENAME_TAB*/
+                    socketRef.current.emit(ACTIONS.RENAME_TAB, {
+                      roomId,
+                      tabId: tabID,
+                      newTabName
+                    });
+    
+                    toast.dismiss(t.id);
+                  }
+                  else {
+                    document.getElementById('newTabName').placeholder = "Please enter a tab name!";
+                    document.getElementById('newTabName').style = 'border: 2px solid red;';
+                  }
+                }
+              }>Rename</button>
+            </div>
+          ));
+        },
+      },
+      'hr', // separator
+      {
+        label: 'Close',
+        callback: async(e) => {
+          // Get TabID
+          let tabID = null;
+          if(e.target.id && e.target.id !== 'closeTab-icon'){
+            tabID = e.target.id
+          }
+          else {
+            tabID = e.target.closest('.tabBtn').id;
+          }
 
-    if (e.target.id === 'closeTab-icon' || e.target.className === 'closeTabBtn') {
-      const closeTabId = e.target.closest('div').id;
-      /*Send REMOVE_TAB*/
-      socketRef.current.emit(ACTIONS.REMOVE_TAB, {
-        roomId,
-        tabId: closeTabId,
+          // Send remove tab info
+          if(tabID){
+            await closeTab(null, tabID);
+          }else{
+            await closeTab(e, null);
+          }
+        },
+      },
+    ]
+
+    let myTabs = document.getElementsByClassName('btn tabBtn');
+    for (let i = 0; i< myTabs.length; i++) {
+      new VanillaContextMenu({
+        scope: myTabs[i],
+        menuItems: myMenu,
+        customClass: 'tabMenu',
       });
     }
-
-    else if (e.target.id === 'createTab-icon' || e.target.className === 'btn createTabBtn') {
-
-      toast((t) => (
-        <div>
-          <input id="tabName" type="text" placeholder="Enter Tag Name" />
-          <select name="Type:" id="chooseType">
-            <option value="xml">HTML</option>
-            <option value="javascript">JS</option>
-            <option value="css">CSS</option>
-          </select>
-          <button onClick={
-            () => {
-              let tabName = document.getElementById('tabName').value;
-              if (tabName.length !== 0) {
-                let type = document.getElementById('chooseType').value;
-                let tab = {
-                  roomId, tabID: uuidV4().toString(), title: tabName, type, value: `new tab`, createdByUser: socketRef.current.id /* socketID */
-                }
-
-                /*Send ADD_TAB*/
-                socketRef.current.emit(ACTIONS.ADD_TAB, {
-                  roomId,
-                  tab,
-                });
-
-                toast.dismiss(t.id);
-              }
-              else {
-                document.getElementById('tabName').placeholder = "Please enter a tab name!";
-                document.getElementById('tabName').style = 'border: 2px solid red;';
-              }
-            }
-          }>New</button>
-        </div>
-      ));
-    }
-
-    else {
-      return;
-    }
-  }
-  /*****************************  *************** ****************************************** *
-   *****************************  END CONFIG FRONTEND ************************************** *
-   *****************************  *************** ****************************************** */
-
-
-
-
-  async function coppyRoomId() {
-    try {
-      await navigator.clipboard.writeText(roomId);
-      toast.success('Room ID has been coppied to your clipboard');
-    } catch (error) {
-      toast.error('Couldn not copy the Room ID');
-    };
-  };
-
-  function leaveRoom() {
-    templateSaveCode(reactNavigator);
-  };
-
-  // add separator and drag events for panels
-  useEffect(() => {
-    simpledrag()
-
-    var leftPane = document.getElementById('left-panel');
-    var rightPane = document.getElementById('right-panel');
-    var paneSep = document.getElementById('separator');
-
-    // The script below constrains the target to move horizontally between a left and a right virtual boundaries.
-    // - the left limit is positioned at 10% of the screen width
-    // - the right limit is positioned at 90% of the screen width
-    var leftLimit = 20;
-    var rightLimit = 70;
-
-
-    paneSep.sdrag(function (el, pageX, startX, pageY, startY, fix) {
-
-        fix.skipX = true;
-
-        if (pageX < window.innerWidth * leftLimit / 100) {
-            pageX = window.innerWidth * leftLimit / 100;
-            fix.pageX = pageX;
-        }
-        if (pageX > window.innerWidth * rightLimit / 100) {
-            pageX = window.innerWidth * rightLimit / 100;
-            fix.pageX = pageX;
-        }
-
-        var cur = pageX / window.innerWidth * 100;
-        if (cur < 0) {
-            cur = 0;
-        }
-        if (cur > window.innerWidth) {
-            cur = window.innerWidth;
-        }
-
-
-        var right = (100-cur-2);
-        leftPane.style.width = cur + '%';
-        rightPane.style.width = right + '%';
-
-    }, null, 'horizontal');
-  },[])
+    
+  })
 
   return (
     <div className="mainWrap">
@@ -385,17 +430,19 @@ const EditorPage = () => {
         </div>
 
         {/* Content */}
-        <div className="editorContent">
+        <Split 
+          className="editorContent"
+          sizes={[60, 40]}
+          minSize={250}
+          gutterSize={5}
+        >
           {/* Space */}
           <div className="editorSpace" id="left-panel"></div>
-
-          <div className="separator" id="separator"></div>
-
           {/* Output */}
           <div className="outputSpace" id="right-panel">
             {socketRef.current !== null && <Output socketRef={socketRef} roomId={roomId}/>}
           </div>
-        </div>
+        </Split>
 
       </div>
     </div>
