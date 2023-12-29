@@ -1,3 +1,25 @@
+/* width */
+::-webkit-scrollbar{
+  width: 8px;
+  height: 8px;
+}
+
+/* Track */
+/* ::-webkit-scrollbar-track:horizontal  {
+  background: #f1f1f1; 
+} */
+ 
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #424242; 
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #929292; 
+}
+
+
 .homePageWrapper{
   height: 100vh;
   display: flex;
@@ -263,7 +285,10 @@ input:focus::placeholder {
   border: 3px solid #282a36;
   /* display: flex;  */
   /* border-top: 3px solid red; */
-  height: 93.1vh;
+  height: 93.2vh;
+  max-height: 93.2vh;
+  overflow-y: auto;
+  background-color: #282a36;
 }
 
 .outputContainer {
@@ -279,9 +304,10 @@ input:focus::placeholder {
   background: #1c1e29;
   border-bottom: 1px solid #424242;
   color: #eee;
-  height: 30px;
+  height: 35px;
   width: 100%;
   align-items: center;
+  /* margin-top: 5px; */
 }
 
 .consoleTaskbar{
@@ -290,9 +316,11 @@ input:focus::placeholder {
   background: #1c1e29;
   border-bottom: 1px solid #424242;
   color: #eee;
-  height: 30px;
+  height: 35px;
   width: 100%;
   align-items: center;
+  /* margin-top: 5px; */
+
 }
 
 .consoleTitle{
@@ -323,6 +351,11 @@ input:focus::placeholder {
   color: #9b9b9b;
 }
 
+.inactiveicon{
+  color: #9b9b9b;
+  pointer-events: none;
+}
+
 .outputMonitor{
   height: 80%;
   width: 99.5%;
@@ -331,29 +364,37 @@ input:focus::placeholder {
 }
 
 .consoleContainer{
-  background: #004aad;
-  max-height: 31.5vh;
+  /* background: #004aad; */
+  height: 90%;
   width: 100%;
+  background: #282a36;
+  min-height: auto;
   overflow-y: auto;
   /* margin-right: 10px; */
 }
 
 .consoleLine{
-  padding-left: 5px;
+  padding-left: 20px;
+  min-height: 35px;
   display: grid;
   grid-template-columns: 80% 20%;
+  border-top: 1px solid #424242;
+  align-items: center;
+  height: fit-content;
+  padding-top: 5px;
+  padding-bottom: 5px;
 }
 
 .consoleLine .log{
-  color: #99cc33;
+  color: #99cc33 !important;
 }
 
 .consoleLine .error{
-  color: red;
+  color: red !important;
 }
 
 .consoleLine .warn{
-  color: #ffcc00;
+  color: #ffcc00 !important;
 }
 
 .consoleLine .lineInfo{

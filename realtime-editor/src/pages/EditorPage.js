@@ -15,7 +15,7 @@ import { templateSaveCode, templateCloseTab } from '../assets/alerts/templateSav
 import { setupPanel } from '../assets/panel_gutter/setupPanel.js';
 import Split from 'react-split';
 import VanillaContextMenu from 'vanilla-context-menu';
-
+// import { useSharedState } from '../helpers/SharedStateContext.js';
 
 const EditorPage = () => {
   const socketRef = useRef(null);
@@ -25,8 +25,10 @@ const EditorPage = () => {
   const { roomId } = useParams();
   const [clients, setClients] = useState([]);
   const [tabs, setTabs] = useState([]);
+  // const { setSharedData } = useSharedState();
 
   var editorSpace = null;
+
 
   /*Create Socket for Sending and Listening Actions */
   useEffect(() => {
@@ -149,20 +151,16 @@ const EditorPage = () => {
 
   }
   /*Require Tad Data for Rendering Editor */
-  function showEditor(socketRef, tabId) {
+  async function showEditor(socketRef, tabId) {
     /* Show Editor */
 
-    socketRef.current.emit(ACTIONS.GET_TAB, {
+    await socketRef.current.emit(ACTIONS.GET_TAB, {
       roomId,
       tabId,
       socketId: socketRef.current.id,
     });
 
-    socketRef.current.on(ACTIONS.GET_TAB, ({ tab }) => {
-      // const editorSpace = document.getElementsByClassName('editorSpace')[0];
-      // const editorID = editorSpace.getElementsByTagName('textarea')[0];
-      // console.log(editorID);
-
+    await socketRef.current.on(ACTIONS.GET_TAB, ({ tab }) => {
       renderEditor(tab);
     });
 
@@ -395,6 +393,9 @@ const EditorPage = () => {
     }
     
   })
+  /*On code change */
+  
+
 
   return (
     <div className="mainWrap">

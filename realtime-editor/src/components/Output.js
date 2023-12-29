@@ -21,6 +21,8 @@ import {
   scriptDisableConsoleTemplate,
   initTabIDsTemplate,
 } from "../assets/variables_template/index.js"
+// import { useSharedState } from "../helpers/SharedStateContext.js";
+
 
 const initHTMLContent = "<html><head></head><body>Hello, iframe content!</body></html>";
 
@@ -31,12 +33,15 @@ const Output = ({socketRef, roomId}) => {
   const [selectedTabs, setSelectedTabs] = useState(initTabIDsTemplate);
   const [previewFrame, setPreviewFrame] = useState(initHTMLContent);
   const [consoleValues, setConsoleValues] = useState([]);
+  const [refresh, setRefresh] = useState(false);
+  const URL_BASE = 'http://localhost:3000';
+  // const { setSharedData } = useSharedState();
 
   // Redefine console for showing in console window
   useEffect(() => {
     // Event listener to receive console logs from the iframe
     const receiveLogs = (event) => {
-
+      
       if (event.data && event.data.type === 'error') {
         // Handle or log the SyntaxError as needed
         setConsoleValues((prevLogs) => [...prevLogs, {type:'error', message:event.data.message, filename: event.data.filename, lineno: event.data.lineno}]);
@@ -44,7 +49,7 @@ const Output = ({socketRef, roomId}) => {
 
       if (event.data && event.data.type === 'log') {
         // Do whatever you want with the logs received from the iframe
-        setConsoleValues((prevLogs) => [...prevLogs, {type:'log', message:event.data.message, filename: event.data.filename, lineno: event.data.lineno}]);
+        setConsoleValues((prevLogs) => [...prevLogs, {type:'log', message:event.data.message, time:event.data.time}]);
       }
 
       if (event.data && event.data.type === 'warn') {
@@ -54,18 +59,29 @@ const Output = ({socketRef, roomId}) => {
     };
 
     window.addEventListener('message', receiveLogs);
-
     return () => {
       window.removeEventListener('message', receiveLogs);
     };
-  }, []);
-  // Rerender when selectedTabs array change
+  }, [consoleValues]);
+
+  // Add listener for components
   useEffect(() => {
-    //add listening for Output button
+    //add listener for taskbars
+    handleRightIcon();
+    //add listener for Output button (Run button)
     handleOutputBtn();
+  }, []);
+
+  useEffect(() => {
+    //refresh code every 2 second
+    setTimeout(() => {
+      setRefresh(!refresh);
+    }, 2000)
     //generate code for previewFrame
     generateCode();
-  }, [selectedTabs, socketRef]);
+    //add scroll to end of console window
+    scrollToBottom();
+  }, [refresh]);
 
   /*----FUNCTION AREA----*/
   // toggle select from check boxs
@@ -112,7 +128,7 @@ const Output = ({socketRef, roomId}) => {
     });
   }
   // Generate Code
-  function generateCode(){
+  async function generateCode(){
     if(selectedTabs.length === 0){
       return;
     }
@@ -120,7 +136,7 @@ const Output = ({socketRef, roomId}) => {
     // response is data array obj [{},{}...]
     // 1.Get code from server using getCodeWithSocket function
     // 2.Merge them with code template
-    getCodeWithSocket().then((data) =>{
+    await getCodeWithSocket().then((data) =>{
       let cssValue ='';
       let htmlValue ='';
       let jsValue ='';
@@ -147,16 +163,34 @@ const Output = ({socketRef, roomId}) => {
                     ${cssValue}
                 </head>
                 <body>
-                    ${scriptDisableConsoleTemplate}
+                    
                     ${scriptConsoleTemplate}
                     ${htmlValue}
                 </body>
                 ${jsValue}
             </html>
           `;
+      // Share html Content to Preview page
+      // setSharedData({ htmlCode: htmlContent });
       // rerender iframe
       setPreviewFrame(htmlContent);
     });
+    //${scriptDisableConsoleTemplate}
+  }
+  //Style icon buttons
+  function addStyleIcon(button){
+    if(button.className.baseVal === 'outputIcon'){
+      button.classList.add('inactiveicon');
+    }
+    else{
+      button.classList.remove('inactiveicon');
+    }
+    // button.style.background = 'red';
+  }
+  //Scroll Console Monitor to bottom
+  function scrollToBottom() {
+    var consoleContainer = document.getElementById('consoleContainer');
+    consoleContainer.scrollTop = consoleContainer.scrollHeight;
   }
   // Add tabs to select input form
   const addTabsToForm = () => {
@@ -173,6 +207,41 @@ const Output = ({socketRef, roomId}) => {
       setTabs(tabsArray);
     }
   };
+  // Add listeners for rightIcon class
+  function handleRightIcon(){
+    const rightIcon = document.getElementsByClassName('rightIcon');
+    //For Monitor taskbar
+    rightIcon[0].addEventListener('click', (e)=>{
+      if(e.target){
+        if(e.target.id === null){
+          return ;
+        }
+        if(e.target.id === 'reload-icon'){
+          addStyleIcon(e.target);
+          setTimeout(() => {
+            setConsoleValues([]);
+          }, 2000)
+          addStyleIcon(e.target);
+        }
+        else if(e.target.id === 'responsive-icon') {
+          console.log('responsive icon::OKOK');
+        }
+        else if(e.target.id === 'newWindow-icon'){
+          console.log(getIframeSrc());
+        }
+      }
+    })
+  }
+  // Get iframe src
+  function getIframeSrc() {
+    var iframe = document.getElementById('monitor');
+    if(iframe){
+      return(iframe.src);
+    }
+    else{
+      return null;
+    }
+  }
 
   return (
       <Split
@@ -199,15 +268,15 @@ const Output = ({socketRef, roomId}) => {
               <span className="outputTitle">Monitor</span>
               
               <div className="rightIcon">
-                <VscRefresh className="outputIcon"/>
-                <VscVersions className="outputIcon"/>
-                <VscMultipleWindows className="outputIcon"/>
+                <VscRefresh className="outputIcon" id="reload-icon"/>
+                <VscVersions className="outputIcon" id="responsive-icon"/>
+                <VscMultipleWindows className="outputIcon" id="newWindow-icon"/>
               </div>
             </div>
 
             <div className="outputMonitor" id="newIframe">
               <iframe
-                  // src="http://localhost:3000"
+                  src={`${URL_BASE}/preview/${roomId}`}
                   id="monitor"
                   srcDoc={previewFrame}
                   title="output"
@@ -235,9 +304,17 @@ const Output = ({socketRef, roomId}) => {
                   <span className={value.type}>
                     {value.message}
                   </span>
-                  <span className="lineInfo">
-                    {value.filename}
-                    {value.lineno}
+                  <span className={"lineInfo " + value.type}>
+                    {value.type !== 'error' && (
+                      <>
+                        {'time: '+ value.time}
+                      </> 
+                    )}
+                    {value.type === 'error' && (
+                      <>
+                        {value.filename +' : ' + value.lineno}
+                      </> 
+                    )}
                   </span>
                 </div>
               </div>

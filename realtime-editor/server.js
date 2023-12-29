@@ -123,22 +123,23 @@ io.on('connection',(socket)=>{
 
     //CODE CHANGE
     socket.on(ACTIONS.CODE_CHANGE, ({roomId, tabId, code}) => {
-        socket.in(roomId).emit(ACTIONS.CODE_CHANGE, {tabId, code});
-    });
-
-    //SYNC CODE
-    socket.on(ACTIONS.SYNC_CODE, ({roomId, saveTabId, tabId, code, socketId}) => {
-        //SAVE CODE
-        
-        if(code !== null && code.length !== 0) {
+         //SAVE CODE
+         if(code !== null && code.length !== 0) {
             let tabs = getAllTabs(roomId);
-            let tab = tabs.find(tab => (tab.tabID === saveTabId) && (tab.roomId === roomId));
+            let tab = tabs.find(tab => (tab.tabID === tabId) && (tab.roomId === roomId));
 
             // IF TAB !== UNDEFINED
             if(tab !== undefined) {
                 tab.value = code
             }
         }
+        //SEND CODE
+        socket.in(roomId).emit(ACTIONS.CODE_CHANGE, {tabId, code});
+    });
+
+    //SYNC CODE
+    socket.on(ACTIONS.SYNC_CODE, ({roomId, tabId, socketId}) => {
+       
         // SEND CODE
         let tab = getAllTabs(roomId).find(tab => (tab.tabID === tabId) && (tab.roomId === roomId));
         io.to(socketId).emit(ACTIONS.CODE_CHANGE, {tabId, code: tab.value});
