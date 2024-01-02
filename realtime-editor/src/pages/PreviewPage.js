@@ -1,33 +1,54 @@
 //refce 
 import '../PreviewPage.css'
 import React, { useEffect, useState } from 'react'
-import { useLocation, useNavigate, Navigate, useParams } from 'react-router-dom';
-// import { useSharedState } from '../helpers/SharedStateContext';
-const html = 
-    `
-    <!DOCTYPE html>
-    <html>
-    <head>
-    <style>
-    body {background-color: powderblue;}
-    h1   {color: blue;}
-    p    {color: red;}
-    </style>
-    </head>
-    <body>
+import { useLocation, useParams, useNavigate } from 'react-router-dom';
+import { previewHtmlTemplate } from '../assets/variables_template';
+import ACTIONS from '../Actions';
+import { getCodeWithSocket, generateCode} from '../helpers/CodeSelectedTabs';
+import toast from 'react-hot-toast';
 
-    <h1>This is a heading</h1>
-    <p>This is a paragraph.</p>
-
-    </body>
-    </html>
-    `
 const PreviewPage = () => {
     const { roomId } = useParams();
-    const [Code, setCode] = useState(html);
+    const [Code, setCode] = useState(previewHtmlTemplate);
+    const location = useLocation();
+    const [listen, setListen] = useState(true);
+    const reactNavigator = useNavigate();
 
-    // const { sharedData } = useSharedState();
-    
+    useEffect(() => {
+        const searchParams = new URLSearchParams(location.search);
+        const socketId = decodeURIComponent(searchParams.get('id'));
+        const socket = window.opener?.socketInNewWindow || null;
+
+        // function get code have tabIds in selectedTabs array
+        const getCodeFromSelectedTabs = async (selectedTabs) =>{
+            try {
+                //get code form server
+                const data = await getCodeWithSocket(socket, { roomId, data: selectedTabs, socketId: socketId});
+                //generate code for previewFrame 
+                const htmlContent = generateCode(data, false, false);
+                // rerender code
+                setCode(htmlContent);
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        if(socket === null){
+            toast.error(`Connection to server is not established with this socket id`);
+            // Redirect to HomePage
+            reactNavigator('/', {
+                state: {
+                roomId,
+                },
+            })
+            return; 
+        }
+        // Listen for the connection open event
+        socket.addEventListener(ACTIONS.GET_SELECTEDTABS, (event) => {
+            getCodeFromSelectedTabs(event.data);
+        });
+
+    }, []);
 
     return (
         <div>

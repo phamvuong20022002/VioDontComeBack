@@ -18,7 +18,17 @@ const io = new Server(server);
 const userSocketMap = {};
 
 // DB contains all tabs data
+// Schema [{roomId, tabID, title, type, value, createdByUser}, {}.....]
 const tabsData = [];
+
+// DB contains selectedTabs of each clients
+// Schema [{roomId, socketId, data}, {}.....]
+const selectedTabs = [];
+
+//DB contains saved rooms
+// Schema [{roomId, savedDate, socketId}, {}.....]
+const savedRooms = [];
+
 
 function getAllConnectedClients(roomId){
     return Array.from(io.sockets.adapter.rooms.get(roomId) || []).map((socketId)=>{
@@ -34,6 +44,54 @@ function getAllTabs(roomId){
         return obj.roomId === roomId;
     })
 };
+
+function removeArrayByRoomId(arr, roomId) {
+    if(arr.length === 0) return;
+    for (let i = arr.length - 1; i >= 0; i--) {
+        if (arr[i].roomId === roomId) {
+            arr.splice(i, 1);
+        }
+    }
+}
+
+
+function getSelectedTabs(roomId, socketId){
+    const userSelectedTabs = selectedTabs.filter(obj => {
+        return (obj.roomId === roomId) && (obj.socketId === socketId);
+    });
+    if(userSelectedTabs.length > 1){
+        throw new Error('Exists same items in selectedTabs!');
+    }
+    if(userSelectedTabs.length > 0){
+        return userSelectedTabs[0];
+    }else{
+        return null;
+    }
+}
+
+function addSelectedTabs(data) {
+    let userSeletedTabs = getSelectedTabs(data.roomId, data.socketId)
+    if(userSeletedTabs){  
+        userSeletedTabs.data = data.data;
+    }
+    else{
+        selectedTabs.push(data);
+    }
+}
+
+function getSavedRoom(roomId){
+    const savedRoom = savedRooms.filter(obj => {
+        return (obj.roomId === roomId);
+    });
+    if(savedRoom.length > 1){
+        throw new Error('Exists same items in SavedRooms!');
+    }
+    if(savedRoom.length > 0){
+        return savedRoom[0];
+    }else{
+        return null;
+    }
+}
 
 io.on('connection',(socket)=>{
     // console.log('socket connected', socket.id);
@@ -160,6 +218,64 @@ io.on('connection',(socket)=>{
         }
     });
 
+    //SAVE SELECTED TABS
+    socket.on(ACTIONS.SAVE_SELECTEDTABS, ({roomId, socketId, data}) => {
+        // ADD SELECTED TABS
+        if(roomId !== undefined && socketId !== undefined){
+            addSelectedTabs({roomId, socketId, data});
+        }
+        // RESPONSE SELECTED TABS ARRAY
+        const responseData = getSelectedTabs(roomId, socketId);
+        if(responseData){
+            io.to(socketId).emit(ACTIONS.GET_SELECTEDTABS, { data: responseData.data});
+        }
+    })
+
+    //USER SAVE ROOM
+    socket.on(ACTIONS.SAVE_ROOM, ({roomId, socketId, save}) => {
+        if(save){
+            if(io.sockets.adapter.rooms.has(roomId)){
+                try {
+                    //SAVE ROOM
+                    const savedRoom = getSavedRoom(roomId);
+                    if(savedRoom){
+                        savedRoom.socketId = socketId;
+                        savedRoom.savedDate = new Date();
+                    }else{
+                        savedRooms.push({roomId, savedDate: new Date() ,socketId});
+                    }
+                    //SAVE SUCCESSFULLY
+                    io.to(socketId).emit(ACTIONS.SAVE_ROOM, {user: userSocketMap[socket.id], status: '201'});
+                } catch (error) {
+                    console.log(error);
+                    io.to(socketId).emit(ACTIONS.SAVE_ROOM, {user: userSocketMap[socket.id], status:'error', message: 'Have some problem when saving!' });
+                }
+            }
+            else{
+                io.to(socketId).emit(ACTIONS.SAVE_ROOM, {user: userSocketMap[socket.id], status:'error', message: 'Your room is not found!' });
+            }
+        }
+        else{
+            //REMOVE ALL ITEMS OF THE ROOM
+            removeArrayByRoomId(tabsData, roomId);
+            removeArrayByRoomId(selectedTabs, roomId);
+            removeArrayByRoomId(savedRooms, roomId);
+
+            //SEND STATUS
+            io.to(socketId).emit(ACTIONS.SAVE_ROOM, {user: userSocketMap[socket.id], status:'200', message: 'removed' });
+        }
+    })
+
+    //USER LEAVE
+    socket.on(ACTIONS.LEAVE, ({roomId}) => {
+        const clients = getAllConnectedClients(roomId);
+        let isLastClient = 0;
+        if(clients.length < 2) {
+            isLastClient = 1;
+        }
+        io.to(socket.id).emit(ACTIONS.LEAVE, {isLastClient});
+    })
+
     //DISCONNECTING
     socket.on('disconnecting', () =>{
         const rooms = [...socket.rooms];
@@ -170,7 +286,6 @@ io.on('connection',(socket)=>{
             });
         });
         delete userSocketMap[socket.id];
-        socket.leave();
     });
 });
 

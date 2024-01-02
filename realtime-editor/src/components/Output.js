@@ -16,14 +16,9 @@ import { TfiReload } from "react-icons/tfi";
 import SelectInput from "../assets/select_input/SelectInput";
 import ACTIONS from "../Actions";
 import Split from 'react-split'
-import {
-  scriptConsoleTemplate,
-  scriptDisableConsoleTemplate,
-  initTabIDsTemplate,
-} from "../assets/variables_template/index.js"
-// import { useSharedState } from "../helpers/SharedStateContext.js";
-
-
+import { initTabIDsTemplate, TIMEOUT } from "../assets/variables_template/index.js"
+import _ from 'lodash';
+import { getCodeWithSocket,  generateCode} from "../helpers/CodeSelectedTabs.js";
 const initHTMLContent = "<html><head></head><body>Hello, iframe content!</body></html>";
 
 
@@ -34,8 +29,7 @@ const Output = ({socketRef, roomId}) => {
   const [previewFrame, setPreviewFrame] = useState(initHTMLContent);
   const [consoleValues, setConsoleValues] = useState([]);
   const [refresh, setRefresh] = useState(false);
-  const URL_BASE = 'http://localhost:3000';
-  // const { setSharedData } = useSharedState();
+  const preSelectedTabs = useRef([]);
 
   // Redefine console for showing in console window
   useEffect(() => {
@@ -67,20 +61,64 @@ const Output = ({socketRef, roomId}) => {
   // Add listener for components
   useEffect(() => {
     //add listener for taskbars
-    handleRightIcon();
+    const rightIcon = document.getElementsByClassName('rightIcon');
+    
+    rightIcon[0].addEventListener('click', (e)=>{
+      handleRightIcon(e);
+    })
+    
     //add listener for Output button (Run button)
-    handleOutputBtn();
-  }, []);
+    let btn = document.getElementById('outputBtn')
+    btn.addEventListener('click', () => {
+      addTabsToForm();
+    })
+
+    return () => {
+      if(rightIcon && btn){
+        rightIcon?.[0]?.removeEventListener('click', handleRightIcon);
+        btn.removeEventListener('click', addTabsToForm);
+      }
+      
+    };
+  }, [selectedTabs]);
 
   useEffect(() => {
-    //refresh code every 2 second
+    //function get code have tabIds in selectedTabs array
+    const getCodeFromSelectedTabs = async () =>{
+      try {
+        //get code form server
+        const data = await getCodeWithSocket(socketRef.current, { roomId, data: selectedTabs, socketId: socketRef.current.id});
+        //generate code for previewFrame 
+        const htmlContent = generateCode(data);
+        // rerender iframe
+        setPreviewFrame(htmlContent);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    //refresh code every 1 second
     setTimeout(() => {
       setRefresh(!refresh);
-    }, 2000)
-    //generate code for previewFrame
-    generateCode();
-    //add scroll to end of console window
-    scrollToBottom();
+    }, TIMEOUT);
+    //check length of selectedTabs
+    if(selectedTabs.length === 0){
+      setPreviewFrame(initHTMLContent);
+    }else{
+      if(socketRef.current !== null){
+        // save selectedTabs to server
+        socketRef.current.emit(ACTIONS.SAVE_SELECTEDTABS,{
+          roomId,
+          socketId: socketRef.current.id,
+          data: selectedTabs
+        })
+      }
+      // get code from selectedTabs
+      getCodeFromSelectedTabs();
+      //add scroll to end of console window
+      scrollToBottom();
+    }
+
   }, [refresh]);
 
   /*----FUNCTION AREA----*/
@@ -88,14 +126,6 @@ const Output = ({socketRef, roomId}) => {
   const toggleSelect = () => {
     setDisplaySelect(!displaySelect);
   };
-  // handle Click Output button 
-  function handleOutputBtn(){
-      let btn = document.getElementById('outputBtn')
-      btn.addEventListener('click', () => {
-        // rotateIcon(btn);
-        addTabsToForm();
-      })
-  }
   // rotate 90 output Button
   function rotateIcon(btn) {
     btn.classList.toggle('rotate-90');
@@ -107,76 +137,10 @@ const Output = ({socketRef, roomId}) => {
       setSelectedTabs(selectedTabs.filter((selected) => selected !== tabID));
     } else {
       setSelectedTabs([...selectedTabs, tabID]);
+      
     }
   };
-  // Pre-ActionsCode have 'REQUEST or RECIEVE' pass parameters with 'data' from an array obj [{},{}...]
-  // Get code from server
-  function getCodeWithSocket() {
-    return new Promise((resolve, reject) => {
-      // Request code from server
-      socketRef.current.emit(ACTIONS.REQUEST_CODE, {
-        roomId,
-        data: selectedTabs,
-        socketId: socketRef.current.id,
-      });
-  
-      // Listen for the code from the server
-      socketRef.current.on(ACTIONS.RECEIVE_CODE, ({ data }) => {
-        // Resolve the Promise with the received code
-        resolve(data);
-      });
-    });
-  }
-  // Generate Code
-  async function generateCode(){
-    if(selectedTabs.length === 0){
-      return;
-    }
 
-    // response is data array obj [{},{}...]
-    // 1.Get code from server using getCodeWithSocket function
-    // 2.Merge them with code template
-    await getCodeWithSocket().then((data) =>{
-      let cssValue ='';
-      let htmlValue ='';
-      let jsValue ='';
-      data.forEach((tab) =>{
-          if(tab === null){
-            return;
-          }
-          else if(tab.type === 'css'){
-            let tabStyle = `<style>${tab.value}</style>`;
-            cssValue += tabStyle;
-          }
-          else if(tab.type === 'xml'){
-            htmlValue += tab.value;
-          }
-          else{
-            let tabScript = `<script>${tab.value}</script>`;
-            jsValue += tabScript;
-          }
-      })
-      // Merge code with codeTemplate
-      let htmlContent = `
-            <html>
-                <head>
-                    ${cssValue}
-                </head>
-                <body>
-                    
-                    ${scriptConsoleTemplate}
-                    ${htmlValue}
-                </body>
-                ${jsValue}
-            </html>
-          `;
-      // Share html Content to Preview page
-      // setSharedData({ htmlCode: htmlContent });
-      // rerender iframe
-      setPreviewFrame(htmlContent);
-    });
-    //${scriptDisableConsoleTemplate}
-  }
   //Style icon buttons
   function addStyleIcon(button){
     if(button.className.baseVal === 'outputIcon'){
@@ -208,29 +172,36 @@ const Output = ({socketRef, roomId}) => {
     }
   };
   // Add listeners for rightIcon class
-  function handleRightIcon(){
-    const rightIcon = document.getElementsByClassName('rightIcon');
-    //For Monitor taskbar
-    rightIcon[0].addEventListener('click', (e)=>{
-      if(e.target){
-        if(e.target.id === null){
-          return ;
-        }
-        if(e.target.id === 'reload-icon'){
-          addStyleIcon(e.target);
-          setTimeout(() => {
-            setConsoleValues([]);
-          }, 2000)
-          addStyleIcon(e.target);
-        }
-        else if(e.target.id === 'responsive-icon') {
-          console.log('responsive icon::OKOK');
-        }
-        else if(e.target.id === 'newWindow-icon'){
-          console.log(getIframeSrc());
+  function handleRightIcon(e){
+    if(e.target){
+      if(e.target.id === null){
+        return ;
+      }
+      //reload icon button
+      if(e.target.id === 'reload-icon'){
+        addStyleIcon(e.target);
+        setTimeout(() => {
+          setConsoleValues([]);
+        }, 2000)
+        addStyleIcon(e.target);
+      }
+      //responsive icon button
+      else if(e.target.id === 'responsive-icon') {
+        console.log('responsive icon::OKOK');
+      }
+      //new window icon button
+      else if(e.target.id === 'newWindow-icon'){
+        if(!_.isEqual(preSelectedTabs.current, selectedTabs)){
+          const newWindow = window.open(`${getIframeSrc()}?id=${encodeURIComponent(socketRef.current.id)}`);
+          if (newWindow) {
+            newWindow.opener.socketInNewWindow = socketRef.current;
+            console.log('SEND::', selectedTabs);
+            newWindow.opener.socketNewWindowData = selectedTabs;
+          }
+          preSelectedTabs.current = selectedTabs;
         }
       }
-    })
+    }
   }
   // Get iframe src
   function getIframeSrc() {
@@ -276,7 +247,7 @@ const Output = ({socketRef, roomId}) => {
 
             <div className="outputMonitor" id="newIframe">
               <iframe
-                  src={`${URL_BASE}/preview/${roomId}`}
+                  src={`/preview/${roomId}`}
                   id="monitor"
                   srcDoc={previewFrame}
                   title="output"

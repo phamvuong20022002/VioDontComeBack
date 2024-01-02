@@ -11,11 +11,18 @@ import { initSocket } from '../socket';
 import ACTIONS from '../Actions';
 import toast from 'react-hot-toast';
 import { v4 as uuidV4 } from 'uuid';
-import { templateSaveCode, templateCloseTab } from '../assets/alerts/templateSaveCode.js';
+import { 
+  templateSaveCode, 
+  templateCloseTab,
+  templateSaveRoomError, 
+  templateSaveRoomSuccess
+} from '../assets/alerts/index.js';
 import { setupPanel } from '../assets/panel_gutter/setupPanel.js';
 import Split from 'react-split';
 import VanillaContextMenu from 'vanilla-context-menu';
-// import { useSharedState } from '../helpers/SharedStateContext.js';
+import { getStatusSaveRoom } from '../helpers/GetStatusSaveRoom';
+import { isLastClient } from '../helpers/GetLastClient.js';
+
 
 const EditorPage = () => {
   const socketRef = useRef(null);
@@ -25,8 +32,6 @@ const EditorPage = () => {
   const { roomId } = useParams();
   const [clients, setClients] = useState([]);
   const [tabs, setTabs] = useState([]);
-  // const { setSharedData } = useSharedState();
-
   var editorSpace = null;
 
 
@@ -63,13 +68,6 @@ const EditorPage = () => {
           roomId,
           tab: null,
         });
-
-        // //SYNC CODE
-        // socketRef.current.emit(ACTIONS.SYNC_CODE, {
-        //   code: codeRef.current,
-        //   socketId,
-        //   // tabId: oneTab.tabID,
-        // });
       });
 
       // Listening for GETTING TABS
@@ -298,8 +296,41 @@ const EditorPage = () => {
     };
   };
   /* Leave room button */
-  function leaveRoom() {
-    templateSaveCode(reactNavigator);
+  async function leaveRoom() {
+    //check is last client?
+    const isLastClient_ = await isLastClient(socketRef.current, roomId);
+    if(!isLastClient_) {
+      //return Home page
+      reactNavigator('/');
+      return;
+    }
+    // popup save code for last client
+    const result = await templateSaveCode();
+    if(result.isDismissed){
+      return;
+    }
+    //Save code
+    else if(result.isConfirmed){
+      const data = await getStatusSaveRoom(socketRef.current, roomId, true);
+      if(data.status === '201'){
+        await templateSaveRoomSuccess(reactNavigator, roomId)
+      }
+      else if(data.status === 'error') {
+        await templateSaveRoomError(data.message)
+      }
+      return;
+    }
+    //Don't Save code
+    else {
+      const data = await getStatusSaveRoom(socketRef.current, roomId, false);
+      if(data.status === '200') {
+        reactNavigator('/');
+        return;
+      }
+      else{
+        await templateSaveRoomError('Have some problems during clean code, Please try again!')
+      }
+    }
   };
 
   /*----USEEFFECT AREA----*/
@@ -393,7 +424,6 @@ const EditorPage = () => {
     }
     
   })
-  /*On code change */
   
 
 

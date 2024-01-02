@@ -128,6 +128,26 @@ export const scriptDisableConsoleTemplate = `
 </script>
 `
 
+export const previewHtmlTemplate = 
+    `
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <style>
+    body {background-color: powderblue;}
+    h1   {color: blue;}
+    p    {color: red;}
+    </style>
+    </head>
+    <body>
+
+    <h1>This is a heading</h1>
+    <p>This is a paragraph.</p>
+
+    </body>
+    </html>
+    `
+
 export const initTabIDsTemplate = ['10', '20', '30'];
 
 export const initTabsTemplate = [
@@ -135,3 +155,5 @@ export const initTabsTemplate = [
     {tabID: '20', title: 'index.css'},
     {tabID: '30', title: 'index.js'},
   ];
+
+export const TIMEOUT = 1000
