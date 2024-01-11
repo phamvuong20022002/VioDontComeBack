@@ -77,8 +77,8 @@ const Home = () => {
                 <a href="https://facebook.com/phamhihihi">Vuong Pham</a>
             </h4>
             <h5>
-                Beta 1.0.0 on DEV
-                released version date: 26/10/2023 
+                Beta 1.1.0 on DEV
+                released version date: 11/01/2024
             </h5>
         </footer>
     </div>
