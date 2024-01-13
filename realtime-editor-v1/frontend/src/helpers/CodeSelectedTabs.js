@@ -35,7 +35,7 @@ export const generateCode = (data, disableConsole = true, addScriptConsole = tru
           htmlValue += tab.value;
         }
         else{
-          let tabScript = `<script>${tab.value}</script>`;
+          let tabScript = `<script type="text/babel">${tab.value}</script>`;
           jsValue += tabScript;
         }
     })

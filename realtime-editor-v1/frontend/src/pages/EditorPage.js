@@ -23,6 +23,13 @@ import VanillaContextMenu from 'vanilla-context-menu';
 import { getStatusSaveRoom } from '../helpers/GetStatusSaveRoom';
 import { isLastClient } from '../helpers/GetLastClient.js';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { 
+  readFileContents, 
+  getFileTypeFromMimeType, 
+  getFileNameWithoutExtension 
+} from '../helpers/ReadFileContents.js';
+import { MAX_FILE_SIZE_MB } from '../assets/variables_template/index.js';
+import { get } from 'lodash';
 
 
 const EditorPage = () => {
@@ -34,6 +41,7 @@ const EditorPage = () => {
   const [clients, setClients] = useState([]);
   const [tabs, setTabs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [fileContents, setFileContents] = useState(null); 
   var editorSpace = null;
 
 
@@ -156,7 +164,7 @@ const EditorPage = () => {
     );
 
   }
-  /*Require Tad Data for Rendering Editor */
+  /*Request Tad Data for Rendering Editor */
   async function showEditor(socketRef, tabId) {
     /* Show Editor */
 
@@ -198,6 +206,9 @@ const EditorPage = () => {
   }
   /* Add Handle Click On `editorSidebar` class*/
   function handleClick(e) {
+    if(e?.target?.id === 'fileInput'){
+      return;
+    }
     //click  another element on editorSidebar
     if (e.target.className === 'editorSidebar' || e.target.tagName === 'path'|| e.target.className === 'tabContainer') {
       return;
@@ -244,8 +255,8 @@ const EditorPage = () => {
 
               /*Send ADD_TAB*/
               socketRef.current.emit(ACTIONS.ADD_TAB, {
-              roomId,
-              tab,
+                roomId,
+                tab,
               });
 
               toast.dismiss(t.id);
@@ -294,6 +305,8 @@ const EditorPage = () => {
     }
     
   }
+  /*Create menu for file uploading or file creating */
+  
   /*Coppy ID room button */
   async function coppyRoomId() {
     try {
@@ -340,6 +353,53 @@ const EditorPage = () => {
       }
     }
   };
+  /* Handle File Changed */
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+  
+    if (file) {
+      // Check if the file size is within the acceptable range
+      if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+        toast.error(`File size exceeds the limit of ${MAX_FILE_SIZE_MB} MB`);
+        return;
+      }
+      //chek if type of file is not html, css or javascript
+      if (getFileTypeFromMimeType(file.type) === 'unknown') {
+        toast.error(`Unknown file type ${file.type}`);
+        return;
+      }
+      try {
+        // Read file contents
+        const fileContents = await readFileContents(file);
+        const fileDetails = {
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          lastModified: file.lastModified,
+          contents: fileContents,
+        };
+
+        //Create New tab
+        let tab = {
+          roomId, 
+          tabID: uuidV4().toString(), 
+          title: getFileNameWithoutExtension(fileDetails.name), 
+          type: getFileTypeFromMimeType(fileDetails.type), 
+          value: fileDetails.contents, 
+          createdByUser: socketRef.current.id /* socketID */
+        }
+
+        /*Send ADD_TAB*/
+        await socketRef.current.emit(ACTIONS.ADD_TAB, {
+          roomId,
+          tab,
+        });
+      } catch (error) {
+        toast.error(`Error reading file!`);
+        return;
+      }
+    }
+  };
 
   /*----USEEFFECT AREA----*/
   /*Add Event Listener for editor side bar  */
@@ -357,7 +417,7 @@ const EditorPage = () => {
       }
     };
   }, [loading]);
-  /*Add right click menu on tab */
+  /*Add right click menu for tab */
   useEffect(()=> {
     const myMenu = [
       {
@@ -431,7 +491,45 @@ const EditorPage = () => {
       });
     }
     
-  }, [loading])
+  }, [loading, tabs])
+  /*Add click menu for create tab button and editor sidebar */
+  useEffect(() => {
+    const myMenu = [
+      {
+        label: 'Create new tab',
+        callback: async(e)=>{
+          createNewTab();
+        },
+      },
+      'hr',
+      {
+        label: 'Upload from device',
+        callback: async(e) => {
+          // Trigger click on hidden file input
+          const fileInput = document.getElementById('fileInput');
+          if (fileInput) {
+            fileInput.click(); 
+          }
+        },
+      },
+    ]
+
+    let createbtn = document.getElementsByClassName('btn createTabBtn');
+    let editorSidebar = document.getElementsByClassName('editorSidebar');
+    if(createbtn.length && editorSidebar.length){
+      new VanillaContextMenu({
+        scope: createbtn[0],
+        menuItems: myMenu,
+        customClass: 'tabMenu',
+      });
+      new VanillaContextMenu({
+        scope: editorSidebar[0],
+        menuItems: myMenu,
+        customClass: 'tabMenu',
+      });
+    }
+
+  },[loading, tabs])
   
 
 
@@ -468,6 +566,12 @@ const EditorPage = () => {
           <div className='tagCreate'>
             <button className="btn createTabBtn"><AiOutlinePlus id="createTab-icon" /></button>
           </div>
+          <input
+              id="fileInput"
+              type="file"
+              style={{ display: 'none' }}
+              onChange={handleFileChange}
+          />
         </div>
 
         {/* Content */}

@@ -157,3 +157,5 @@ export const initTabsTemplate = [
   ];
 
 export const TIMEOUT = 1000
+
+export const MAX_FILE_SIZE_MB = 2

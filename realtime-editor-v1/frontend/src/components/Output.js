@@ -195,8 +195,9 @@ const Output = ({socketRef, roomId}) => {
         addStyleIcon(e.target);
       }
       //responsive icon button
-      else if(e.target.id === 'responsive-icon') {
-        console.log('responsive icon::OKOK');
+      else if(e.target.id === 'export-icon') {
+        console.log('export icon::OKOK');
+        console.log('code export::', previewFrame);
       }
       //new window icon button
       else if(e.target.id === 'newWindow-icon'){
@@ -250,7 +251,7 @@ const Output = ({socketRef, roomId}) => {
               
               <div className="rightIcon">
                 <VscRefresh className="outputIcon" id="reload-icon"/>
-                <VscCloudDownload  className="outputIcon" id="responsive-icon"/>
+                <VscCloudDownload  className="outputIcon" id="export-icon"/>
                 <VscMultipleWindows className="outputIcon" id="newWindow-icon"/>
               </div>
             </div>
@@ -261,7 +262,7 @@ const Output = ({socketRef, roomId}) => {
                   id="monitor"
                   srcDoc={previewFrame}
                   title="output"
-                  sandbox="allow-same-origin allow-scripts"
+                  sandbox="allow-same-origin allow-scripts allow-forms"
                   width="100%"
                   height="100%"
                   frameBorder="0"

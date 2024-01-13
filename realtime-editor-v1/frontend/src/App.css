@@ -189,7 +189,7 @@ input:focus::placeholder {
 
 .CodeMirror {
   min-height: 93.8vh;
-  max-width: 150vh;
+  max-width: 120vh;
   font-size: 16px;
   box-sizing: border-box;
 }
@@ -270,6 +270,7 @@ input:focus::placeholder {
 
 .tabMenu{
   top: 40px !important;
+  transform-origin: top left !important;
 }
 
 
@@ -428,15 +429,26 @@ input:focus::placeholder {
   /* background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAFAQMAAABo7865AAAABlBMVEVHcEzMzMzyAv2sAAAAAXRSTlMAQObYZgAAABBJREFUeF5jOAMEEAIEEFwAn3kMwcB6I2AAAAAASUVORK5CYII='); */
   background-color: #39464e;
   cursor: row-resize;
+  transition: transform 0.3s ease;
 }
 
 .gutter.gutter-horizontal {
   /* background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg=='); */
   background-color: #39464e;
   cursor: col-resize;
+  transition: transform 0.3s ease;
+}
+
+.gutter.gutter-vertical:hover{
+  background-color: #5271ff;
+}
+
+.gutter.gutter-horizontal:hover{
+  background-color: #5271ff;
 }
 
 .container__top{
   height: 100vh;
   background-color: white;
 }
+
