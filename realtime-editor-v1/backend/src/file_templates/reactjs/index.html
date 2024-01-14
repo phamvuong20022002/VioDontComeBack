@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <!-- Import CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/babel-standalone@6/babel.js"></script>
+    
+    <div id="root"></div>
+    <img src="https://img.icons8.com/officel/600/388BF5/react.png" alt="">
+    <script src="script.js" type="text/babel"></script>
+
+    <script>
+        // Function to get all CDN URLs in the HTML content
+        function getCDNUrls(htmlContent) {
+            // Regular expression to match common CDN URL patterns
+            const cdnRegex = /https?:\/\/(?:cdn|code|ajax|maxcdn|cdn.jsdelivr|unpkg|cloudflare)\.[^'"\s)]+/gi;
+    
+            // Extract all matches using the regex
+            const matches = htmlContent.match(cdnRegex);
+    
+            if (matches) {
+                console.log('All CDN URLs:', matches);
+                return matches; // Return the array of CDN URLs
+            } else {
+                console.log('No CDN URLs found.');
+                return []; // Return an empty array if no CDN URLs are found
+            }
+        }
+    
+        function generateNpmInstallCommands(cdnUrls) {
+            const commands = cdnUrls.map(url => {
+                // Extract package name from the URL
+                const packageName = url.split('/').pop().split('@')[0];
+                return `npm install ${packageName}`;
+            });
+    
+            return commands.join('\n');
+        }
+    
+        // Fetch the HTML content of the current document
+        const htmlContent = document.documentElement.outerHTML;
+    
+        // Call the function with the HTML content
+        const cdnUrls = getCDNUrls(htmlContent);
+    
+        if (cdnUrls.length > 0) {
+          const npmInstallCommands = generateNpmInstallCommands(cdnUrls);
+          console.log(npmInstallCommands);
+        }
+    </script>
+
+</body>
+</html>

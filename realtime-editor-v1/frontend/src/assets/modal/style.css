@@ -1,0 +1,34 @@
+.icon-height {
+    height: 100px;
+    width: 100px;
+}
+
+.bluecontainer {
+    background: #E9F8FF;
+}
+
+.redcontainer {
+    background: #FEE3E3;
+}
+
+.redbtn {
+    background: #F67273;
+}
+
+.modal {
+    --bs-modal-width: 650px;
+}
+
+.modal-content {
+    height: 600px;
+}
+
+.icon-rotate {
+    transform: rotate(136deg);
+}
+
+.redbtn:hover {
+    color: var(--bs-btn-hover-color);
+    background: #F67273;
+    border-color: transparent;
+}

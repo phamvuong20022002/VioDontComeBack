@@ -29,8 +29,9 @@ import {
   getFileNameWithoutExtension 
 } from '../helpers/ReadFileContents.js';
 import { MAX_FILE_SIZE_MB } from '../assets/variables_template/index.js';
-import { get } from 'lodash';
-
+// import Modal from '../assets/modal/Language.modal.js';
+import Modal from '../assets/modal/Language.modal.2.js';
+import {ROOMSTATUS, ROOMOPTIONS} from '../Status.js';
 
 const EditorPage = () => {
   const socketRef = useRef(null);
@@ -42,6 +43,8 @@ const EditorPage = () => {
   const [tabs, setTabs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [fileContents, setFileContents] = useState(null); 
+  const [showModal, setShowModal] = useState(false);
+  const [selectedOption, setSelectedOption] = useState(null);
   var editorSpace = null;
 
 
@@ -76,17 +79,25 @@ const EditorPage = () => {
         socketRef.current.emit(ACTIONS.SYNC_TABS, {
           socketId,
           roomId,
-          tab: null,
+          option: selectedOption,
         });
       });
 
       // Listening for GETTING TABS
-      await socketRef.current.on(ACTIONS.GET_TABS, ({ tabs }) => {
-        setTabs(tabs);
-        // Turn off loading;
+      socketRef.current.on(ACTIONS.GET_TABS, ({ tabs, roomStatus }) => {
+        // Wait for load tabs and roomStatus;
         setTimeout(() => {
+          if(roomStatus === ROOMSTATUS.NEW){
+            setShowModal(true);
+          }
+          else{
+            setShowModal(false);
+            setTabs(tabs);
+          }
+
+          //turn off loading
           setLoading(false);
-        }, 200)
+        }, 500)
       });
       
 
@@ -125,7 +136,7 @@ const EditorPage = () => {
       await socketRef.current.off(ACTIONS.JOIN);
       await socketRef.current.off(ACTIONS.DISCONNECTED);
     }
-  }, [loading, socketRef]);
+  }, [loading]);
 
   /*----FUNCTION AREA----*/
   /*Get TabID and Code from CodeRef */
@@ -400,6 +411,12 @@ const EditorPage = () => {
       }
     }
   };
+  const handleOptionClick = (option) => {
+    // Handle the option click
+    setSelectedOption(option);
+    setShowModal(false); // Close the modal
+    setLoading(true); // For demonstration purposes, setting loading to true after selecting an option
+  };
 
   /*----USEEFFECT AREA----*/
   /*Add Event Listener for editor side bar  */
@@ -535,62 +552,71 @@ const EditorPage = () => {
 
   return (
     <div>
-    { loading ? (<LoadingSpinner />):
-    (<div className="mainWrap">
-      <div className="aside">
-        <div className="asideInner">
-          <div className="logo">
-            <img className="logoEditor" src="/logoRe.png" alt="logo"></img>
+      {showModal && (
+        <Modal
+          onOptionClick={handleOptionClick}
+          onClose={() => {
+            reactNavigator('/')
+          }}
+        />
+      )}
+
+      {!showModal && loading ? (<LoadingSpinner />):
+      (<div className="mainWrap">
+        <div className="aside">
+          <div className="asideInner">
+            <div className="logo">
+              <img className="logoEditor" src="/logoRe.png" alt="logo"></img>
+            </div>
+            <h3>Connected</h3>
+            <div className="clientsList">
+              {
+                clients.map((client, index) => (
+                  <Client key={index} username={client.username} clientID={client.socketID}/>
+                ))
+              }
+            </div>
           </div>
-          <h3>Connected</h3>
-          <div className="clientsList">
+          <button className="btn shareBtn" onClick={coppyRoomId}>Share RoomID</button>
+          <button className="btn leaveBtn" onClick={leaveRoom}>Leave</button>
+        </div>
+
+        <div className="editorWrap">
+          {/* Side Bar */}
+          <div className="editorSidebar">
             {
-              clients.map((client, index) => (
-                <Client key={index} username={client.username} clientID={client.socketID}/>
+              tabs.map(tab => (
+                <Tab key={tab.tabID} tab={tab} />
               ))
             }
+            <div className='tagCreate'>
+              <button className="btn createTabBtn"><AiOutlinePlus id="createTab-icon" /></button>
+            </div>
+            <input
+                id="fileInput"
+                type="file"
+                style={{ display: 'none' }}
+                onChange={handleFileChange}
+            />
           </div>
+
+          {/* Content */}
+          <Split 
+            className="editorContent"
+            sizes={[60, 40]}
+            minSize={250}
+            gutterSize={3}
+          >
+            {/* Space */}
+            <div className="editorSpace" id="left-panel"></div>
+            {/* Output */}
+            <div className="outputSpace" id="right-panel">
+              {socketRef.current !== null && <Output socketRef={socketRef} roomId={roomId}/>}
+            </div>
+          </Split>
+
         </div>
-        <button className="btn shareBtn" onClick={coppyRoomId}>Share RoomID</button>
-        <button className="btn leaveBtn" onClick={leaveRoom}>Leave</button>
-      </div>
-
-      <div className="editorWrap">
-        {/* Side Bar */}
-        <div className="editorSidebar">
-          {
-            tabs.map(tab => (
-              <Tab key={tab.tabID} tab={tab} />
-            ))
-          }
-          <div className='tagCreate'>
-            <button className="btn createTabBtn"><AiOutlinePlus id="createTab-icon" /></button>
-          </div>
-          <input
-              id="fileInput"
-              type="file"
-              style={{ display: 'none' }}
-              onChange={handleFileChange}
-          />
-        </div>
-
-        {/* Content */}
-        <Split 
-          className="editorContent"
-          sizes={[60, 40]}
-          minSize={250}
-          gutterSize={3}
-        >
-          {/* Space */}
-          <div className="editorSpace" id="left-panel"></div>
-          {/* Output */}
-          <div className="outputSpace" id="right-panel">
-            {socketRef.current !== null && <Output socketRef={socketRef} roomId={roomId}/>}
-          </div>
-        </Split>
-
-      </div>
-    </div>)}
+      </div>)}
     </div>
   )
 }

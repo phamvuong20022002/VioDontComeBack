@@ -1,4 +1,10 @@
 const ACTIONS = require('../consts/Actions');
+const {ROOMSTATUS, ROOMOPTIONS} = require('../consts/Status');
+const {JAVASCRIPT_DATA_INIT,
+    TABID_INIT,
+    TYPE_INIT,
+    TITLE_INIT,
+    REACT_DATA_INIT} = require('../consts/InitData');
 
 //DB
 // const global._userSocketMap = {};
@@ -99,17 +105,30 @@ class EditorOnlineService {
         });
 
         //SYNC TAB
-        socket.on(ACTIONS.SYNC_TABS, ({roomId, socketId}) => {
-            if(getAllTabs(roomId).length === 0){
-                global._tabsData.push
-                (
-                    {roomId, tabID: '10', title: 'index', type: 'xml', value: `<h1 class="welcome">Hello World</h1>`, createdByUser: socketId /* socketID */ },
-                    {roomId, tabID: '20', title: 'index', type: 'css', value: `body{\n background: white; \n} \n.welcome{ color: red; text-align: center;}`, createdByUser: socketId /* socketID */ },
-                    {roomId, tabID: '30', title: 'index', type: 'javascript', value: `let welcomeClass = document.getElementsByClassName('welcome')[0];\nif(welcomeClass){\n    welcomeClass.style.color = 'green';\n}`, createdByUser: socketId /* socketID */ },
-                )
+        socket.on(ACTIONS.SYNC_TABS, async({roomId, socketId, option}) => {
+            let roomStatus = ROOMSTATUS.EXISTING;          
+            if(getAllTabs(roomId).length === 0) {
+                if(option === ROOMOPTIONS.JAVASCRIPT){
+                    global._tabsData.push
+                    (
+                        {roomId, tabID: TABID_INIT.HTML, title: TITLE_INIT.HTML, type: TYPE_INIT.HTML, value: JAVASCRIPT_DATA_INIT.HTML, createdByUser: socketId /* socketID */ },
+                        {roomId, tabID: TABID_INIT.CSS, title: TITLE_INIT.CSS, type: TYPE_INIT.CSS, value: JAVASCRIPT_DATA_INIT.CSS, createdByUser: socketId /* socketID */ },
+                        {roomId, tabID: TABID_INIT.JAVASCRIPT, title: TITLE_INIT.JAVASCRIPT, type: TYPE_INIT.JAVASCRIPT, value: JAVASCRIPT_DATA_INIT.JAVASCRIPT, createdByUser: socketId /* socketID */ },
+                    )
+                }
+                else if (option === ROOMOPTIONS.REACT){
+                    global._tabsData.push
+                    (
+                        {roomId, tabID: TABID_INIT.HTML, title: TITLE_INIT.HTML, type: TYPE_INIT.HTML, value: REACT_DATA_INIT.HTML, createdByUser: socketId /* socketID */ },
+                        {roomId, tabID: TABID_INIT.CSS, title: TITLE_INIT.CSS, type: TYPE_INIT.CSS, value: REACT_DATA_INIT.CSS, createdByUser: socketId /* socketID */ },
+                        {roomId, tabID: TABID_INIT.JAVASCRIPT, title: TITLE_INIT.JAVASCRIPT, type: TYPE_INIT.JAVASCRIPT, value: REACT_DATA_INIT.JAVASCRIPT, createdByUser: socketId /* socketID */ },
+                    )
+                }
+                
+                roomStatus = ROOMSTATUS.NEW
             }
             let tabs = getAllTabs(roomId);
-            global._io.to(socketId).emit(ACTIONS.GET_TABS, {tabs});
+            global._io.to(socketId).emit(ACTIONS.GET_TABS, {tabs, roomStatus});
             // socket.in(roomId).emit(ACTIONS.CODE_CHANGE, {tabId, code});
         });
 

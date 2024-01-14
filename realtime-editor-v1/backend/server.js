@@ -4,10 +4,13 @@ const http = require('http');
 const {Server} = require('socket.io');
 require('dotenv').config();
 const EditorOnlineService = require('./src/services/editorOnline.service')
-
+const path = require('path');
 
 const server = http.createServer(app);
 const io = new Server(server);
+
+//init data
+global.__dirname = path.dirname(__dirname);
 
 //global storage
 global._io = io;

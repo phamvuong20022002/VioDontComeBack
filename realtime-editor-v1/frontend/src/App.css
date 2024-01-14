@@ -452,3 +452,14 @@ input:focus::placeholder {
   background-color: white;
 }
 
+
+/* .modal {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  padding: 20px;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; 
+} */
