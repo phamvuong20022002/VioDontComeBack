@@ -121,7 +121,7 @@ class EditorOnlineService {
                     (
                         {roomId, tabID: TABID_INIT.HTML, title: TITLE_INIT.HTML, type: TYPE_INIT.HTML, value: REACT_DATA_INIT.HTML, createdByUser: socketId /* socketID */ },
                         {roomId, tabID: TABID_INIT.CSS, title: TITLE_INIT.CSS, type: TYPE_INIT.CSS, value: REACT_DATA_INIT.CSS, createdByUser: socketId /* socketID */ },
-                        {roomId, tabID: TABID_INIT.JAVASCRIPT, title: TITLE_INIT.JAVASCRIPT, type: TYPE_INIT.JAVASCRIPT, value: REACT_DATA_INIT.JAVASCRIPT, createdByUser: socketId /* socketID */ },
+                        {roomId, tabID: TABID_INIT.JAVASCRIPT, title: TITLE_INIT.JAVASCRIPT, type: TYPE_INIT.BABEL, value: REACT_DATA_INIT.JAVASCRIPT, createdByUser: socketId /* socketID */ },
                     )
                 }
                 
@@ -162,12 +162,13 @@ class EditorOnlineService {
         });
 
         //RENAME TAB
-        socket.on(ACTIONS.RENAME_TAB, ({roomId, tabId, newTabName}) => {
+        socket.on(ACTIONS.EDIT_TAB, ({roomId, tabId, newTabName, newType}) => {
             if(global._io.sockets.adapter.rooms.has(roomId)) {
                 for (let i = 0; i < global._tabsData.length; i++) {
                     let el = global._tabsData[i];
                     if(el.roomId === roomId && el.tabID === tabId){
                         el.title = newTabName;
+                        el.type = newType;
                     }
                 }
             }

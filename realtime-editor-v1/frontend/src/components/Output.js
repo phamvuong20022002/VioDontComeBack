@@ -50,7 +50,7 @@ const Output = ({socketRef, roomId}) => {
 
       if (event.data && event.data.type === 'warn') {
         // Do whatever you want with the logs received from the iframe
-        setConsoleValues((prevLogs) => [...prevLogs, {type:'warn', message:event.data.message, filename: event.data.filename, lineno: event.data.lineno}]);
+        setConsoleValues((prevLogs) => [...prevLogs, {type:'warn', message:event.data.message, time:event.data.time}]);
       }
     };
 
@@ -234,7 +234,7 @@ const Output = ({socketRef, roomId}) => {
           gutterSize={5}
           cursor="row-resize"
       >
-          <div className="container__top" >
+          <div className="container__top">
             {displaySelect &&( 
             <div>
               <SelectInput
@@ -271,7 +271,6 @@ const Output = ({socketRef, roomId}) => {
           </div>
           {/* Separator */}
           <div className="container__bottom">
-
             <div className="consoleTaskbar">
               <span className="consoleTitle">Console</span>
               <div className="rightIcon">

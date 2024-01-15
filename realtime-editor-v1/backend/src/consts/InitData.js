@@ -20,7 +20,8 @@ const TABID_INIT = {
 const TYPE_INIT = {
     HTML: 'xml',
     CSS: 'css',
-    JAVASCRIPT: 'javascript'
+    JAVASCRIPT: 'javascript',
+    BABEL: 'babel',
 }
 const TITLE_INIT = {
     HTML: 'index',

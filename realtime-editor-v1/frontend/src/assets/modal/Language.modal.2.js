@@ -9,7 +9,9 @@ const Modal = ({ onOptionClick, onClose }) => {
 
             <div className="modal__details">
             <h1 className="modal__title">Select Your Language</h1>
-            <p className="modal__description">Sentence that will tell user what this modal is for or something.</p>
+            <p className="modal__description">
+            "Choose a beautiful coffin, climb in and code until you die"
+            </p>
             </div>
             <span className="modal__groupname">TEMPLATES</span>
             <div className="modal__content">

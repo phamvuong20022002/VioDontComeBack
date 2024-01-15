@@ -173,6 +173,10 @@ input:focus::placeholder {
   background: #9b9b9b;
 }
 
+.editorWrap{
+  max-height: 100vh;
+  overflow: hidden;
+}
 
 .editorContent {
   display: flex;
@@ -181,14 +185,15 @@ input:focus::placeholder {
   /* overflow: hidden; */
 }
 
-/* .editorSpace{
-  margin-right: 29px; 
+.editorSpace{
+  /* margin-right: 29px; 
   padding-right: 0px; 
-  padding-bottom: 0px;
-} */
+  padding-bottom: 0px; */
+  background-color: #282a36;
+}
 
 .CodeMirror {
-  min-height: 93.8vh;
+  min-height: 93.9vh;
   max-width: 120vh;
   font-size: 16px;
   box-sizing: border-box;
@@ -204,11 +209,12 @@ input:focus::placeholder {
 
 /* Tab Styles */
 .tabBtn{
-  display: grid;
-  grid-template-columns: 20% 50% 30%;
+  display: flex;
+  /* grid-template-columns: 20% 50% 30%; */
   /* flex-direction: row; */
   height: 19px;
-  width: 130px;
+  /* width: 130px; */
+  /* width: auto; */
   font-size: 14px;
   border: 1px solid #424242;
   background: #1c1e29;
@@ -216,11 +222,16 @@ input:focus::placeholder {
   color: #fff;
   align-items: center;
   font-weight: normal;
+  overflow: hidden;
 }
 
 .tabBtn img{
   width: 20px;
   margin-right: 8px;
+}
+
+.tabBtn .tabTitle{
+  padding-right: 15px;
 }
 
 .closeTabBtn {
@@ -282,14 +293,14 @@ input:focus::placeholder {
   width: 3px;
 }
 .outputSpace{
-  width: 60%;
   border: 3px solid #282a36;
   /* display: flex;  */
   /* border-top: 3px solid red; */
-  height: 93.2vh;
-  max-height: 93.2vh;
+  height: 93.9vh;
+  max-height: 93.9vh;
   overflow-y: auto;
   background-color: #282a36;
+  min-width: 64.5vh;
 }
 
 .outputContainer {
@@ -357,19 +368,31 @@ input:focus::placeholder {
   pointer-events: none;
 }
 
+.container__top{
+  height: auto !important;
+  background-color: white;
+}
+.container__bottom{
+}
+
 .outputMonitor{
-  height: 80%;
-  width: 99.5%;
-  /* overflow-y: auto; */
+  max-height: 80%;
+  width: 100%;
+  overflow-y: auto;
   border: none;
 }
+
+.outputMonitor iframe{
+  max-height: 90vh;
+  height: 88vh;
+}
+
 
 .consoleContainer{
   /* background: #004aad; */
   height: 90%;
   width: 100%;
   background: #282a36;
-  min-height: auto;
   overflow-y: auto;
   /* margin-right: 10px; */
 }
@@ -447,10 +470,7 @@ input:focus::placeholder {
   background-color: #5271ff;
 }
 
-.container__top{
-  height: 100vh;
-  background-color: white;
-}
+
 
 
 /* .modal {

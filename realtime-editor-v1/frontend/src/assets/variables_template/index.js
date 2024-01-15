@@ -39,7 +39,11 @@ const passLogsAndErrorsToParent = () => {
       originalConsole.warn(...args);
 
       // Pass warnings to the parent window
-      window.parent.postMessage({ type: 'warn', message: serializeArgs(args) }, '*');
+      window.parent.postMessage({ 
+        type: 'warn', 
+        message: serializeArgs(args),
+        time: formatDate(new Date())
+      }, '*');
     },
     // You can add more methods like info, debug, etc., if needed
   };

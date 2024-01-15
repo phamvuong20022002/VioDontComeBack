@@ -17,7 +17,7 @@ import {
   templateSaveRoomError, 
   templateSaveRoomSuccess
 } from '../assets/alerts/index.js';
-import { setupPanel } from '../assets/panel_gutter/setupPanel.js';
+import { CodeTypes } from '../assets/code_types/code.types.js';
 import Split from 'react-split';
 import VanillaContextMenu from 'vanilla-context-menu';
 import { getStatusSaveRoom } from '../helpers/GetStatusSaveRoom';
@@ -32,6 +32,7 @@ import { MAX_FILE_SIZE_MB } from '../assets/variables_template/index.js';
 // import Modal from '../assets/modal/Language.modal.js';
 import Modal from '../assets/modal/Language.modal.2.js';
 import {ROOMSTATUS, ROOMOPTIONS} from '../Status.js';
+import { toastNewTab } from '../assets/toasts/create_new_tab.toast.js';
 
 const EditorPage = () => {
   const socketRef = useRef(null);
@@ -45,7 +46,9 @@ const EditorPage = () => {
   const [fileContents, setFileContents] = useState(null); 
   const [showModal, setShowModal] = useState(false);
   const [selectedOption, setSelectedOption] = useState(null);
-  var editorSpace = null;
+  const [newlyChangedTab, setNewlyChangedTab] = useState(null);
+  // var editorSpace = null;
+  const editorSpace = useRef(null);
 
 
   /*Create Socket for Sending and Listening Actions */
@@ -58,7 +61,7 @@ const EditorPage = () => {
 
       function handleErrors(err) {
         console.log('socket error: ', err);
-        toast.error('Socket connection failed. Try again later,');
+        toast.error('Socket connection failed. Try again later 😥');
         reactNavigator('/');
       };
 
@@ -131,12 +134,12 @@ const EditorPage = () => {
       // Init Editor Page
       init();
     }
-    return async () => {
-      await socketRef.current.disconnect();
-      await socketRef.current.off(ACTIONS.JOIN);
-      await socketRef.current.off(ACTIONS.DISCONNECTED);
+    return () => {
+      socketRef.current.disconnect();
+      socketRef.current.off(ACTIONS.JOIN);
+      socketRef.current.off(ACTIONS.DISCONNECTED);
     }
-  }, [loading]);
+  }, [loading, socketRef]);
 
   /*----FUNCTION AREA----*/
   /*Get TabID and Code from CodeRef */
@@ -147,10 +150,10 @@ const EditorPage = () => {
   }
   /*Render Editor function */
   function renderEditor(tab) {
-    if (editorSpace !== null) {
-      editorSpace.unmount();
+    if (editorSpace.current !== null) {
+      editorSpace.current.unmount();
     }
-    editorSpace = ReactDOM.createRoot(
+    editorSpace.current = ReactDOM.createRoot(
       document.getElementsByClassName("editorSpace")[0]
     );
     let data = getTabIDAndCode(codeRef.current);
@@ -163,7 +166,7 @@ const EditorPage = () => {
       tabId: tab.tabID,
     });
 
-    editorSpace.render(
+    editorSpace.current.render(
       <Editor
         socketRef={socketRef}
         roomId={roomId}
@@ -178,7 +181,6 @@ const EditorPage = () => {
   /*Request Tad Data for Rendering Editor */
   async function showEditor(socketRef, tabId) {
     /* Show Editor */
-
     await socketRef.current.emit(ACTIONS.GET_TAB, {
       roomId,
       tabId,
@@ -188,24 +190,37 @@ const EditorPage = () => {
     await socketRef.current.on(ACTIONS.GET_TAB, ({ tab }) => {
       renderEditor(tab);
     });
-
-
   }
   /* Active tab function */
-  function activeTab(e) {
-    const currentTab = e.target.closest('div');
-    const currentTabClassname = currentTab.className;
-    // Don't add active style for actived tab
-    if (currentTabClassname.search("active") !== -1) {
+  function activeTab(e=null, tab=null) {
+    let currentTab = null;
+    if(tab){
+      currentTab = tab;
+    }
+    else if(e){
+      currentTab = e.target.closest('div');
+    }
+    else{
       return;
-    };
+    }
 
+    if(currentTab){
+      const currentTabClassname = currentTab.className;
+      // Don't add active style for actived tab
+      if (currentTabClassname.search("active") !== -1) {
+        return;
+      };
+    }
+    else{
+      return;
+    }
+  
     // Remove active style on tab
     let tabContainers = document.getElementsByClassName('tabContainer');
     Array.from(tabContainers).forEach(function (element) {
-      let activeTab = element.querySelector('.active');
-      if (activeTab) {
-        activeTab.classList.remove('active');
+      let activedTab = element.querySelector('.active');
+      if (activedTab) {
+        activedTab.classList.remove('active');
         return;
       }
     });
@@ -246,43 +261,23 @@ const EditorPage = () => {
   /*Create New Tab */
   async function createNewTab() {
     //Create new tab
-    const result = await toast((t) => (
-      <div>
-        <input id="tabName" type="text" placeholder="Enter Tag Name" />
-        
-        <select name="Type:" id="chooseType">
-          <option value="xml">HTML</option>
-          <option value="javascript">JS</option>
-          <option value="css">CSS</option>
-        </select>
+    let tab = {
+      roomId,
+      tabID: uuidV4().toString(),
+      value: `new tab`,
+      createdByUser: socketRef.current.id, /* socketID */
+    };
+    const result = await toastNewTab(tab);
+    setNewlyChangedTab(tab.tabID);
 
-        <button onClick={() => {
-            let tabName = document.getElementById('tabName').value;
-            if (tabName.length !== 0) {
-              let type = document.getElementById('chooseType').value;
-              let tab = {
-                roomId, tabID: uuidV4().toString(), title: tabName, type, value: `new tab`, createdByUser: socketRef.current.id /* socketID */
-              }
-
-              /*Send ADD_TAB*/
-              socketRef.current.emit(ACTIONS.ADD_TAB, {
-                roomId,
-                tab,
-              });
-
-              toast.dismiss(t.id);
-            }
-            else {
-              document.getElementById('tabName').placeholder = "Please enter a tab name!";
-              document.getElementById('tabName').style = 'border: 2px solid red;';
-            }
-            }
-          }>
-          New
-        </button>
-      </div>
-    ));
-    return result;
+    //Send new tab to server
+    if(result){
+      /*Send ADD_TAB*/
+      socketRef.current.emit(ACTIONS.ADD_TAB, {
+        roomId,
+        tab,
+      });
+    }
   }
   /*Close and Remove tab data on server */
   async function closeTab(e=null, tabID=null) {
@@ -315,9 +310,9 @@ const EditorPage = () => {
       });
     }
     
+    //Rerender Editor
+    setNewlyChangedTab(null);
   }
-  /*Create menu for file uploading or file creating */
-  
   /*Coppy ID room button */
   async function coppyRoomId() {
     try {
@@ -390,6 +385,8 @@ const EditorPage = () => {
           contents: fileContents,
         };
 
+        console.log('file Details::', fileDetails);
+
         //Create New tab
         let tab = {
           roomId, 
@@ -399,6 +396,8 @@ const EditorPage = () => {
           value: fileDetails.contents, 
           createdByUser: socketRef.current.id /* socketID */
         }
+
+        console.log('uploading file::', tab);
 
         /*Send ADD_TAB*/
         await socketRef.current.emit(ACTIONS.ADD_TAB, {
@@ -411,12 +410,30 @@ const EditorPage = () => {
       }
     }
   };
+  /* Handle Clieck Option from popup */
   const handleOptionClick = (option) => {
     // Handle the option click
     setSelectedOption(option);
     setShowModal(false); // Close the modal
     setLoading(true); // For demonstration purposes, setting loading to true after selecting an option
   };
+  /*Show Editor for first tab and created tab */
+  function showEditorFirstTab(socketRef, tabID = null) {
+    let tab = null;
+    if(tabID){
+      //get class of the newly created tab
+      tab = document.getElementById(tabID);
+    }
+    else{
+      //get first tab
+      tab = document.getElementsByClassName('tabBtn')?.[0];
+    }
+    //active and show
+    if(tab){
+      activeTab(null,tab);
+      showEditor(socketRef, tab.id)
+    }
+  }
 
   /*----USEEFFECT AREA----*/
   /*Add Event Listener for editor side bar  */
@@ -438,7 +455,7 @@ const EditorPage = () => {
   useEffect(()=> {
     const myMenu = [
       {
-        label: 'Rename',
+        label: 'Edit',
         callback: async(e) => {
           // Get TabID
           let tabID = null;
@@ -448,30 +465,48 @@ const EditorPage = () => {
           else {
             tabID = e.target.closest('.tabBtn').id;
           }
-
+          //get current tab data
+          let curentTabName = getFileNameWithoutExtension(e.target.closest('.tabBtn').querySelector('.tabTitle').innerText);
+          let currentTabType = e.target.closest('.tabBtn').getAttribute('datatype');
           // Create toast for input new tab name
           toast((t) => (
             <div>
-              <input id="newTabName" type="text" placeholder="Enter Tag Name" />
+              <span style={{fontSize:"12px", fontWeight:"bold"}}>Edit your tab</span>
+              <br/>
+              <input id="newTabName" type="text" placeholder={curentTabName || 'Enter new tab name'}/>
+
+              <select name="Type:" id="chooseType">
+                <option value={null} title={currentTabType}>Current Type</option>
+                <option value="xml" title="xml">HTML</option>
+                <option value="javascript" title="javascript">JS</option>
+                <option value="babel" title="babel">JS for React</option>
+                <option value="css" title="css">CSS</option>
+              </select>
+
               <button onClick={
                 () => {
-                  let newTabName = document.getElementById('newTabName').value;
-                  if ((newTabName.length !== 0) && tabID) {
-                    /*Send RENAME_TAB*/
-                    socketRef.current.emit(ACTIONS.RENAME_TAB, {
+                  let newTabName = document.getElementById('newTabName').value || curentTabName;
+                  let newType = (document.getElementById('chooseType').value === 'Current Type') ? currentTabType : document.getElementById('chooseType').value
+                  if (tabID) {
+                    let editData = {
                       roomId,
                       tabId: tabID,
-                      newTabName
-                    });
-    
+                      newTabName,
+                      newType
+                    };
+                    /*Send RENAME_TAB*/
+                    socketRef.current.emit(ACTIONS.EDIT_TAB, editData);
+                    //close toast
                     toast.dismiss(t.id);
+                    //set show Editor
+                    setNewlyChangedTab(tabID);
                   }
                   else {
                     document.getElementById('newTabName').placeholder = "Please enter a tab name!";
                     document.getElementById('newTabName').style = 'border: 2px solid red;';
                   }
                 }
-              }>Rename</button>
+              }>Submit</button>
             </div>
           ));
         },
@@ -509,7 +544,7 @@ const EditorPage = () => {
     }
     
   }, [loading, tabs])
-  /*Add click menu for create tab button and editor sidebar */
+  /*Add right click menu for create tab button and editor sidebar */
   useEffect(() => {
     const myMenu = [
       {
@@ -533,12 +568,15 @@ const EditorPage = () => {
 
     let createbtn = document.getElementsByClassName('btn createTabBtn');
     let editorSidebar = document.getElementsByClassName('editorSidebar');
+
     if(createbtn.length && editorSidebar.length){
+      //create right click menu for createTabBtn
       new VanillaContextMenu({
         scope: createbtn[0],
         menuItems: myMenu,
         customClass: 'tabMenu',
       });
+      //create right click menu for editorSidebar
       new VanillaContextMenu({
         scope: editorSidebar[0],
         menuItems: myMenu,
@@ -547,8 +585,15 @@ const EditorPage = () => {
     }
 
   },[loading, tabs])
-  
-
+  /*Show Edit for first loading*/
+  useEffect(() => {
+    if(newlyChangedTab){
+      showEditorFirstTab(socketRef, newlyChangedTab);
+    }
+    else {
+      showEditorFirstTab(socketRef);
+    }
+  },[tabs])
 
   return (
     <div>

@@ -30,7 +30,7 @@ const Editor = ({socketRef, roomId, tab, onCodeChange}) => {
                 editorRef.current = Codemirror.fromTextArea(
                     document.getElementById(JSON.stringify(tab.tabID)),
                     {
-                        mode: tab.type,
+                        mode: (tab.type === 'javascript' || tab.type === 'babel') ? 'javascript' : tab.type,
                         theme: 'dracula',
                         autoCloseTags: true,
                         autoCloseBrackets: true,

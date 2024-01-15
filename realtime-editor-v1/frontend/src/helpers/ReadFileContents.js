@@ -1,3 +1,5 @@
+import { mimeMapping } from "../assets/code_types/code.types";
+
 export const handleFileChange = (e) => {
   return new Promise(async (resolve, reject) => {
     const file = e.target.files[0];
@@ -33,13 +35,6 @@ export const readFileContents = (file) => {
 };
 
 export const getFileTypeFromMimeType = (mimeType) => {
-  const mimeMapping = {
-    'text/javascript': 'js',
-    'application/javascript': 'js',
-    'text/html': 'xml',
-    'text/css': 'css',
-    // Add more MIME types and their corresponding file types as needed
-  };
 
   const lowerCaseMimeType = mimeType.toLowerCase();
   return mimeMapping[lowerCaseMimeType] || 'unknown'; // Default to 'unknown' if not found
