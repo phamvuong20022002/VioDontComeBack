@@ -1,6 +1,6 @@
 //refce 
 import '../PreviewPage.css'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, memo } from 'react'
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import { previewHtmlTemplate } from '../assets/variables_template';
 import ACTIONS from '../Actions';
@@ -69,4 +69,4 @@ const PreviewPage = () => {
     );
 }
 
-export default PreviewPage
+export default memo(PreviewPage);

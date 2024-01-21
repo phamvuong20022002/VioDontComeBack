@@ -1,0 +1,29 @@
+.consoleLine{
+    padding-left: 20px;
+    min-height: 35px;
+    display: grid;
+    grid-template-columns: 80% 20%;
+    border-top: 1px solid #424242;
+    align-items: center;
+    height: fit-content;
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+  
+  .consoleLine .log{
+    color: #99cc33 !important;
+  }
+  
+  .consoleLine .error{
+    color: red !important;
+  }
+  
+  .consoleLine .warn{
+    color: #ffcc00 !important;
+  }
+  
+  .consoleLine .lineInfo{
+    text-align: center;
+    font-style: italic;
+    color: red;
+  }

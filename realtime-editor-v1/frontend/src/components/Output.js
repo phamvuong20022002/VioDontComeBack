@@ -1,25 +1,21 @@
 //Wijmo
 
 
-import { React, useEffect, useState, useRef } from "react";
-import { AiOutlineArrowRight } from "react-icons/ai";
+import { React, useEffect, useState, useRef, memo } from "react";
 import {
-  VscVersions,
   VscMultipleWindows,
   VscRefresh,
-  VscDebugRerun ,
   VscCloudDownload,
-  VscDebugStart 
+  VscDebugStart ,
+  VscTerminal 
 } from "react-icons/vsc";
-import { TfiDownload } from "react-icons/tfi";
-import { BsDownload } from "react-icons/bs";
 import SelectInput from "../assets/select_input/SelectInput";
 import ACTIONS from "../Actions";
-import Split from 'react-split'
 import { initTabIDsTemplate, TIMEOUT } from "../assets/variables_template/index.js"
 import _ from 'lodash';
 import { getCodeWithSocket,  generateCode} from "../helpers/CodeSelectedTabs.js";
 import LoadingSpinner from "./LoadingSpinner.js";
+
 
 
 const initHTMLContent = "<html><head></head><body>Hello, iframe content!</body></html>";
@@ -28,48 +24,18 @@ const Output = ({socketRef, roomId}) => {
   const [tabs, setTabs] = useState([]);
   const [selectedTabs, setSelectedTabs] = useState(initTabIDsTemplate);
   const [previewFrame, setPreviewFrame] = useState(initHTMLContent);
-  const [consoleValues, setConsoleValues] = useState([]);
   const [refresh, setRefresh] = useState(false);
   const [loading, setLoading] = useState(true);
-  const preSelectedTabs = useRef([]);
-
-  // Redefine console for showing in console window
-  useEffect(() => {
-    // Event listener to receive console logs from the iframe
-    const receiveLogs = (event) => {
-      
-      if (event.data && event.data.type === 'error') {
-        // Handle or log the SyntaxError as needed
-        setConsoleValues((prevLogs) => [...prevLogs, {type:'error', message:event.data.message, filename: event.data.filename, lineno: event.data.lineno}]);
-      }
-
-      if (event.data && event.data.type === 'log') {
-        // Do whatever you want with the logs received from the iframe
-        setConsoleValues((prevLogs) => [...prevLogs, {type:'log', message:event.data.message, time:event.data.time}]);
-      }
-
-      if (event.data && event.data.type === 'warn') {
-        // Do whatever you want with the logs received from the iframe
-        setConsoleValues((prevLogs) => [...prevLogs, {type:'warn', message:event.data.message, time:event.data.time}]);
-      }
-    };
-
-    window.addEventListener('message', receiveLogs);
-    return () => {
-      window.removeEventListener('message', receiveLogs);
-    };
-  }, [consoleValues]);
 
   // Add listener for components
   useEffect(() => {
     if(loading) return;
     //add listener for taskbars
-    const rightIcon = document.getElementsByClassName('rightIcon');
-    
+    const rightIcon = document.getElementsByClassName('rightIcon monitor');
     rightIcon[0]?.addEventListener('click', (e)=>{
+      e.preventDefault();
       handleRightIcon(e);
     })
-    
     //add listener for Output button (Run button)
     let btn = document.getElementById('outputBtn')
     btn.addEventListener('click', () => {
@@ -81,7 +47,6 @@ const Output = ({socketRef, roomId}) => {
         rightIcon?.[0]?.removeEventListener('click', handleRightIcon);
         btn.removeEventListener('click', addTabsToForm);
       }
-      
     };
   }, [selectedTabs, loading]);
 
@@ -122,8 +87,6 @@ const Output = ({socketRef, roomId}) => {
       }
       // get code from selectedTabs
       getCodeFromSelectedTabs();
-      //add scroll to end of console window
-      scrollToBottom();
     }
 
   }, [refresh, loading]);
@@ -158,12 +121,6 @@ const Output = ({socketRef, roomId}) => {
     }
     // button.style.background = 'red';
   }
-  //Scroll Console Monitor to bottom
-  function scrollToBottom() {
-    if(loading) return;
-    var consoleContainer = document.getElementById('consoleContainer');
-    consoleContainer.scrollTop = consoleContainer.scrollHeight;
-  }
   // Add tabs to select input form
   const addTabsToForm = () => {
     // Add the new tab to the tabs array
@@ -189,26 +146,26 @@ const Output = ({socketRef, roomId}) => {
       if(e.target.id === 'reload-icon'){
         addStyleIcon(e.target);
         setLoading(true);
-        setTimeout(() => {
-          setConsoleValues([]);
-        }, 1000)
         addStyleIcon(e.target);
       }
-      //responsive icon button
+      //export icon button
       else if(e.target.id === 'export-icon') {
         console.log('export icon::OKOK');
         console.log('code export::', previewFrame);
       }
       //new window icon button
       else if(e.target.id === 'newWindow-icon'){
-        if(!_.isEqual(preSelectedTabs.current, selectedTabs)){
-          const newWindow = window.open(`${getIframeSrc()}?id=${encodeURIComponent(socketRef.current.id)}`);
+        const newWindow = window.open(`${getIframeSrc()}?id=${encodeURIComponent(socketRef.current.id)}`);
           if (newWindow) {
             newWindow.opener.socketInNewWindow = socketRef.current;
             newWindow.opener.socketNewWindowData = selectedTabs;
           }
-          preSelectedTabs.current = selectedTabs;
-        }
+      }
+      else if(e.target.id === 'terminal-icon'){
+        const consoleContainer = document.getElementById('console-container');
+        const leftPanel = document.getElementById('left-panel');
+        leftPanel.style.height = 'calc(50% - 1.5px)';
+        consoleContainer.style.height = 'calc(50% - 1.5px)';
       }
     }
   }
@@ -226,15 +183,11 @@ const Output = ({socketRef, roomId}) => {
   return (
     <div>
       { loading ? (<LoadingSpinner />):
-      (<Split
+      (<div
           className="outputContainer"
-          direction="vertical"
-          sizes={[85, 15]}
-          minSize={200}
-          gutterSize={5}
-          cursor="row-resize"
       >
-          <div className="container__top">
+          {/* Monitor Output */}
+          <div className="container-monitor">
             {displaySelect &&( 
             <div>
               <SelectInput
@@ -246,13 +199,14 @@ const Output = ({socketRef, roomId}) => {
             )}
 
             <div className="outputTaskbar">
-              <VscDebugStart className="outputIcon" id="outputBtn" onClick={toggleSelect}/>
+              <VscDebugStart className="outputIcon" id="outputBtn" onClick={toggleSelect} title="Debug Start With..."/>
               <span className="outputTitle">Monitor</span>
               
-              <div className="rightIcon">
-                <VscRefresh className="outputIcon" id="reload-icon"/>
-                <VscCloudDownload  className="outputIcon" id="export-icon"/>
-                <VscMultipleWindows className="outputIcon" id="newWindow-icon"/>
+              <div className="rightIcon monitor"> 
+                <VscTerminal className="outputIcon" id="terminal-icon" title="Display console monitor"/>
+                <VscRefresh className="outputIcon" id="reload-icon" title="Reload monitor"/>
+                <VscCloudDownload  className="outputIcon" id="export-icon" title="Export current code"/>
+                <VscMultipleWindows className="outputIcon" id="newWindow-icon" title="Open preview in a new window"/>
               </div>
             </div>
 
@@ -269,43 +223,13 @@ const Output = ({socketRef, roomId}) => {
               ></iframe>
             </div>
           </div>
-          {/* Separator */}
-          <div className="container__bottom">
-            <div className="consoleTaskbar">
-              <span className="consoleTitle">Console</span>
-              <div className="rightIcon">
-                <VscDebugRerun className="outputIcon"/>
-              </div>
-            </div>
+          
+          {/* Console Ouput */}
+          {/* <Console loading={loading}/> */}
 
-            <div className="consoleContainer" id="consoleContainer">
-            {consoleValues.map((value, index) => (
-              <div key={index}>
-                <div className="consoleLine">
-                  <span className={value.type}>
-                    {value.message}
-                  </span>
-                  <span className={"lineInfo " + value.type}>
-                    {value.type !== 'error' && (
-                      <>
-                        {'time: '+ value.time}
-                      </> 
-                    )}
-                    {value.type === 'error' && (
-                      <>
-                        {value.filename +' : ' + value.lineno}
-                      </> 
-                    )}
-                  </span>
-                </div>
-              </div>
-            ))}
-            </div>
-          </div>
-
-      </Split>)}
+      </div>)}
     </div>
   );
 };
 
-export default Output;
+export default memo(Output);

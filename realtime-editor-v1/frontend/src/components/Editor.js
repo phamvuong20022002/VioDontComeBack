@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState, memo} from 'react';
 
 import Codemirror from 'codemirror';
 import 'codemirror/lib/codemirror.css';
@@ -83,4 +83,4 @@ const Editor = ({socketRef, roomId, tab, onCodeChange}) => {
   )
 }
 
-export default Editor
+export default memo(Editor);

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {memo} from 'react';
 import { VscChromeClose } from "react-icons/vsc";
 
 
@@ -23,10 +23,10 @@ const Tab = (tabContent) => {
                 <span className="tabTitle">
                     {tabContent.tab.title + "." + typeToTail(tabContent.tab.type).tail}
                 </span>
-                <span className="closeTabBtn"><VscChromeClose id="closeTab-icon" /></span>
+                <span className="closeTabBtn"><VscChromeClose id="closeTab-icon" title="Close tab" /></span>
             </div>
         </div>
     );
 };
 
-export default Tab
+export default memo(Tab);

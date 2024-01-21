@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {memo} from 'react'
 import Avatar from 'react-avatar'
 
 const Client = ({username}) => {
@@ -10,4 +10,4 @@ const Client = ({username}) => {
   )
 }
 
-export default Client
+export default memo(Client);

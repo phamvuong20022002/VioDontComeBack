@@ -186,35 +186,58 @@ input:focus::placeholder {
 }
 
 .editorSpace{
-  /* margin-right: 29px; 
-  padding-right: 0px; 
-  padding-bottom: 0px; */
   background-color: #282a36;
 }
 
 .CodeMirror {
-  min-height: 93.9vh;
+  min-height: 94vh;
   max-width: 120vh;
   font-size: 16px;
   box-sizing: border-box;
 }
 
+.console-container{
+  background-color: #282a36;
+  /* overflow-y: scroll; */
+}
+
 .editorSidebar{
   display: flex;
   border-bottom: 1px solid #424242;
-  max-width: 85vw;
   overflow-x: hidden;
 }
+.console-container{
+  background-color: #1c1e29;
+  /* max-height: 750px !important; */
+}
+
+.console-container .console-box{
+  height: 74.2vh;
+  position: relative;
+  overflow-y: auto;
+  background-color: #282a36;
+  /* background-color: red; */
+  /* max-height: 400px; */
+  transition: transform 0.3s ease;
+}
+
+.console-container .consoleTaskbar{
+  position: relative;
+  display: flex;
+  background: #1c1e29;
+  border-bottom: 1px solid #424242;
+  color: #eee;
+  height: 35px;
+  width: 100%;
+  align-items: center;
+}
+
 
 
 /* Tab Styles */
 .tabBtn{
   display: flex;
-  /* grid-template-columns: 20% 50% 30%; */
-  /* flex-direction: row; */
   height: 19px;
-  /* width: 130px; */
-  /* width: auto; */
   font-size: 14px;
   border: 1px solid #424242;
   background: #1c1e29;
@@ -306,8 +329,9 @@ input:focus::placeholder {
 .outputContainer {
   /* display: flex; */
   /* flex-direction: column; */
-  height: 90vh;
-  max-height: 90vh;
+  /* height: 90vh; */
+  max-height: 100vh;
+  position: relative;
 }
 
 .outputTaskbar{
@@ -320,19 +344,6 @@ input:focus::placeholder {
   width: 100%;
   align-items: center;
   /* margin-top: 5px; */
-}
-
-.consoleTaskbar{
-  display: flex;
-  /* grid-template-columns: 20% 60% 20%; */
-  background: #1c1e29;
-  border-bottom: 1px solid #424242;
-  color: #eee;
-  height: 35px;
-  width: 100%;
-  align-items: center;
-  /* margin-top: 5px; */
-
 }
 
 .consoleTitle{
@@ -368,15 +379,26 @@ input:focus::placeholder {
   pointer-events: none;
 }
 
-.container__top{
+.container-monitor{
+  /* position: relative; */
+  /* height: 50%; */
   height: auto !important;
+  /* padding-top: 56.25%; */
   background-color: white;
 }
-.container__bottom{
-}
+
+/* .outputContainer .container__bottom {
+  height: auto !important;
+  position: absolute;
+  bottom: 0;
+  top: 30rem;
+  width: 100%; 
+  max-height: 20vh;
+  overflow-y: auto;
+} */
 
 .outputMonitor{
-  max-height: 80%;
+  /* max-height: 80%; */
   width: 100%;
   overflow-y: auto;
   border: none;
@@ -385,46 +407,6 @@ input:focus::placeholder {
 .outputMonitor iframe{
   max-height: 90vh;
   height: 88vh;
-}
-
-
-.consoleContainer{
-  /* background: #004aad; */
-  height: 90%;
-  width: 100%;
-  background: #282a36;
-  overflow-y: auto;
-  /* margin-right: 10px; */
-}
-
-.consoleLine{
-  padding-left: 20px;
-  min-height: 35px;
-  display: grid;
-  grid-template-columns: 80% 20%;
-  border-top: 1px solid #424242;
-  align-items: center;
-  height: fit-content;
-  padding-top: 5px;
-  padding-bottom: 5px;
-}
-
-.consoleLine .log{
-  color: #99cc33 !important;
-}
-
-.consoleLine .error{
-  color: red !important;
-}
-
-.consoleLine .warn{
-  color: #ffcc00 !important;
-}
-
-.consoleLine .lineInfo{
-  text-align: center;
-  font-style: italic;
-  color: red;
 }
 
 .separator-output{
@@ -442,9 +424,10 @@ input:focus::placeholder {
 
 
 .gutter {
+  position: relative;
   background-color: #eee;
-  background-repeat: no-repeat;
-  background-position: 50%;
+  margin-left: 1px ;
+  margin-right: 1px;
 }
 
 .gutter.gutter-vertical {

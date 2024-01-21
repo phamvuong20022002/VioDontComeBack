@@ -1,0 +1,8 @@
+### chatbox
+@url_dev=http://localhost:5000
+POST {{url_dev}}/chatbot
+Content-Type: application/json
+
+{
+    "question": "give me a sign up form using reactjs and tailwind?"
+}

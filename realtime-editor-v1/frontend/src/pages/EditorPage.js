@@ -1,118 +1,125 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { useLocation, useNavigate, Navigate, useParams } from 'react-router-dom';
-import ReactDOM from 'react-dom/client';
-import Client from '../components/Client';
-import Tab from '../components/Tab';
-import Editor from '../components/Editor';
-import Output from '../components/Output';
+import React, { useState, useEffect, useRef, memo } from "react";
+import {
+  useLocation,
+  useNavigate,
+  Navigate,
+  useParams,
+} from "react-router-dom";
+import ReactDOM from "react-dom/client";
+import Client from "../components/Client";
+import Tab from "../components/Tab";
+import Editor from "../components/Editor";
+import Output from "../components/Output";
 // import Editor_v2 from '../components/Editor_v2';
 import { AiOutlinePlus } from "react-icons/ai";
-import { initSocket } from '../socket';
-import ACTIONS from '../Actions';
-import toast from 'react-hot-toast';
-import { v4 as uuidV4 } from 'uuid';
-import { 
-  templateSaveCode, 
+import { initSocket } from "../socket";
+import ACTIONS from "../Actions";
+import toast from "react-hot-toast";
+import { v4 as uuidV4 } from "uuid";
+import {
+  templateSaveCode,
   templateCloseTab,
-  templateSaveRoomError, 
-  templateSaveRoomSuccess
-} from '../assets/alerts/index.js';
-import { CodeTypes } from '../assets/code_types/code.types.js';
-import Split from 'react-split';
-import VanillaContextMenu from 'vanilla-context-menu';
-import { getStatusSaveRoom } from '../helpers/GetStatusSaveRoom';
-import { isLastClient } from '../helpers/GetLastClient.js';
-import LoadingSpinner from '../components/LoadingSpinner';
-import { 
-  readFileContents, 
-  getFileTypeFromMimeType, 
-  getFileNameWithoutExtension 
-} from '../helpers/ReadFileContents.js';
-import { MAX_FILE_SIZE_MB } from '../assets/variables_template/index.js';
+  templateSaveRoomError,
+  templateSaveRoomSuccess,
+} from "../assets/alerts/index.js";
+import { CodeTypes } from "../assets/code_types/code.types.js";
+import Split from "react-split";
+import VanillaContextMenu from "vanilla-context-menu";
+import { getStatusSaveRoom } from "../helpers/GetStatusSaveRoom";
+import { isLastClient } from "../helpers/GetLastClient.js";
+import LoadingSpinner from "../components/LoadingSpinner";
+import {
+  readFileContents,
+  getFileTypeFromMimeType,
+  getFileNameWithoutExtension,
+} from "../helpers/ReadFileContents.js";
+import { MAX_FILE_SIZE_MB } from "../assets/variables_template/index.js";
 // import Modal from '../assets/modal/Language.modal.js';
-import Modal from '../assets/modal/Language.modal.2.js';
-import {ROOMSTATUS, ROOMOPTIONS} from '../Status.js';
-import { toastNewTab } from '../assets/toasts/create_new_tab.toast.js';
+import Modal from "../assets/modal/Language.modal.2.js";
+import { ROOMSTATUS, ROOMOPTIONS } from "../Status.js";
+import { toastNewTab } from "../assets/toasts/create_new_tab.toast.js";
+import Console from "../components/Console.js";
+import { VscTrash } from "react-icons/vsc";
 
 const EditorPage = () => {
   const socketRef = useRef(null);
-  const codeRef = useRef('');
+  const codeRef = useRef("");
   const location = useLocation();
   const reactNavigator = useNavigate();
   const { roomId } = useParams();
   const [clients, setClients] = useState([]);
   const [tabs, setTabs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [fileContents, setFileContents] = useState(null); 
+  const [fileContents, setFileContents] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [selectedOption, setSelectedOption] = useState(null);
   const [newlyChangedTab, setNewlyChangedTab] = useState(null);
+  const consoleContainerRef = useRef(null);
+  const [reloadConsole, setReloadConsole] = useState(false);
   // var editorSpace = null;
   const editorSpace = useRef(null);
-
 
   /*Create Socket for Sending and Listening Actions */
   useEffect(() => {
     // Create socket connection
     const init = async () => {
       socketRef.current = await initSocket();
-      socketRef.current.on('connect_error', (err) => handleErrors(err));
-      socketRef.current.on('connect_failed', (err) => handleErrors(err));
+      socketRef.current.on("connect_error", (err) => handleErrors(err));
+      socketRef.current.on("connect_failed", (err) => handleErrors(err));
 
       function handleErrors(err) {
-        console.log('socket error: ', err);
-        toast.error('Socket connection failed. Try again later 😥');
-        reactNavigator('/');
-      };
+        console.log("socket error: ", err);
+        toast.error("Socket connection failed. Try again later 😥");
+        reactNavigator("/");
+      }
 
       // Send JOIN sign
       socketRef.current.emit(ACTIONS.JOIN, {
         roomId,
-        username: location.state?.username || 'anonymous',
+        username: location.state?.username || "anonymous",
       });
 
       // Listening for JOINED
-      socketRef.current.on(ACTIONS.JOINED, ({ clients, username, socketId }) => {
-        if (username !== location.state?.username) {
-          toast.success(`${username} joined room`);
-        }
-        setClients(clients);
+      socketRef.current.on(
+        ACTIONS.JOINED,
+        ({ clients, username, socketId }) => {
+          if (username !== location.state?.username) {
+            toast.success(`${username} joined room`);
+          }
+          setClients(clients);
 
-        //SYNC TABS
-        socketRef.current.emit(ACTIONS.SYNC_TABS, {
-          socketId,
-          roomId,
-          option: selectedOption,
-        });
-      });
+          //SYNC TABS
+          socketRef.current.emit(ACTIONS.SYNC_TABS, {
+            socketId,
+            roomId,
+            option: selectedOption,
+          });
+        }
+      );
 
       // Listening for GETTING TABS
       socketRef.current.on(ACTIONS.GET_TABS, ({ tabs, roomStatus }) => {
         // Wait for load tabs and roomStatus;
         setTimeout(() => {
-          if(roomStatus === ROOMSTATUS.NEW){
+          if (roomStatus === ROOMSTATUS.NEW) {
             setShowModal(true);
-          }
-          else{
+          } else {
             setShowModal(false);
             setTabs(tabs);
           }
 
           //turn off loading
           setLoading(false);
-        }, 500)
+        }, 500);
       });
-      
 
-      // Listening for DISCONNECTED 
+      // Listening for DISCONNECTED
       socketRef.current.on(ACTIONS.DISCONNECTED, ({ socketId, username }) => {
         toast(`${username} left the room.`, {
-          icon: '🏃‍♂️',
+          icon: "🏃‍♂️",
         });
         setClients((prev) => {
-          return prev.filter(
-            (client) => client.socketId !== socketId
-          )
+          return prev.filter((client) => client.socketId !== socketId);
         });
       });
 
@@ -123,14 +130,13 @@ const EditorPage = () => {
     if (!location.state) {
       toast.error("Please enter an USERNAME and try to join again!");
       // Redirect to HomePage
-      reactNavigator('/', {
+      reactNavigator("/", {
         state: {
           roomId,
         },
-      })
+      });
       return;
-    }
-    else {
+    } else {
       // Init Editor Page
       init();
     }
@@ -138,15 +144,15 @@ const EditorPage = () => {
       socketRef.current.disconnect();
       socketRef.current.off(ACTIONS.JOIN);
       socketRef.current.off(ACTIONS.DISCONNECTED);
-    }
+    };
   }, [loading, socketRef]);
 
   /*----FUNCTION AREA----*/
   /*Get TabID and Code from CodeRef */
   function getTabIDAndCode(data) {
-    let tabId = data.substring(0, data.indexOf('|'));
-    let code = data.substring(data.indexOf('|') + 1);
-    return { tabId, code }
+    let tabId = data.substring(0, data.indexOf("|"));
+    let code = data.substring(data.indexOf("|") + 1);
+    return { tabId, code };
   }
   /*Render Editor function */
   function renderEditor(tab) {
@@ -176,7 +182,6 @@ const EditorPage = () => {
         }}
       />
     );
-
   }
   /*Request Tad Data for Rendering Editor */
   async function showEditor(socketRef, tabId) {
@@ -192,69 +197,75 @@ const EditorPage = () => {
     });
   }
   /* Active tab function */
-  function activeTab(e=null, tab=null) {
+  function activeTab(e = null, tab = null) {
     let currentTab = null;
-    if(tab){
+    if (tab) {
       currentTab = tab;
-    }
-    else if(e){
-      currentTab = e.target.closest('div');
-    }
-    else{
+    } else if (e) {
+      currentTab = e.target.closest("div");
+    } else {
       return;
     }
 
-    if(currentTab){
+    if (currentTab) {
       const currentTabClassname = currentTab.className;
       // Don't add active style for actived tab
       if (currentTabClassname.search("active") !== -1) {
         return;
-      };
-    }
-    else{
+      }
+    } else {
       return;
     }
-  
+
     // Remove active style on tab
-    let tabContainers = document.getElementsByClassName('tabContainer');
+    let tabContainers = document.getElementsByClassName("tabContainer");
     Array.from(tabContainers).forEach(function (element) {
-      let activedTab = element.querySelector('.active');
+      let activedTab = element.querySelector(".active");
       if (activedTab) {
-        activedTab.classList.remove('active');
+        activedTab.classList.remove("active");
         return;
       }
     });
-    
-    // Add active style 
-    if (currentTab.className === 'btn tabBtn') {
-      currentTab.classList.add('active');
+
+    // Add active style
+    if (currentTab.className === "btn tabBtn") {
+      currentTab.classList.add("active");
     }
   }
   /* Add Handle Click On `editorSidebar` class*/
   function handleClick(e) {
-    if(e?.target?.id === 'fileInput'){
+    if (e?.target?.id === "fileInput") {
       return;
     }
     //click  another element on editorSidebar
-    if (e.target.className === 'editorSidebar' || e.target.tagName === 'path'|| e.target.className === 'tabContainer') {
+    if (
+      e.target.className === "editorSidebar" ||
+      e.target.tagName === "path" ||
+      e.target.className === "tabContainer"
+    ) {
       return;
     }
     // click create button
-    else if (e.target.className === 'btn createTabBtn' || e.target.id === 'createTab-icon') {
+    else if (
+      e.target.className === "btn createTabBtn" ||
+      e.target.id === "createTab-icon"
+    ) {
       // create a new tab
       createNewTab();
     }
     //  click close button
-    else if (e.target.id === 'closeTab-icon' || e.target.className === 'closeTabBtn'){
+    else if (
+      e.target.id === "closeTab-icon" ||
+      e.target.className === "closeTabBtn"
+    ) {
       //close the tab
       closeTab(e);
-    }
-    else {
+    } else {
       //add active on tab
       activeTab(e);
 
       /*find current tabID and tab data*/
-      const tabID = e.target.closest('div').id;
+      const tabID = e.target.closest("div").id;
       showEditor(socketRef, tabID);
     }
   }
@@ -265,13 +276,13 @@ const EditorPage = () => {
       roomId,
       tabID: uuidV4().toString(),
       value: `new tab`,
-      createdByUser: socketRef.current.id, /* socketID */
+      createdByUser: socketRef.current.id /* socketID */,
     };
     const result = await toastNewTab(tab);
     setNewlyChangedTab(tab.tabID);
 
     //Send new tab to server
-    if(result){
+    if (result) {
       /*Send ADD_TAB*/
       socketRef.current.emit(ACTIONS.ADD_TAB, {
         roomId,
@@ -280,7 +291,7 @@ const EditorPage = () => {
     }
   }
   /*Close and Remove tab data on server */
-  async function closeTab(e=null, tabID=null) {
+  async function closeTab(e = null, tabID = null) {
     // alert are you sure
     const result = await templateCloseTab();
     if (!result.isConfirmed) {
@@ -289,10 +300,13 @@ const EditorPage = () => {
     }
 
     // Close tab in event
-    if(e){
-      if (e.target.id === 'closeTab-icon' || e.target.className === 'closeTabBtn') {
+    if (e) {
+      if (
+        e.target.id === "closeTab-icon" ||
+        e.target.className === "closeTabBtn"
+      ) {
         // remove tab on server backend
-        const closeTabId = e.target.closest('div').id;
+        const closeTabId = e.target.closest("div").id;
         /*Send REMOVE_TAB*/
         socketRef.current.emit(ACTIONS.REMOVE_TAB, {
           roomId,
@@ -302,14 +316,14 @@ const EditorPage = () => {
     }
 
     // Close tab with tabID
-    if(tabID){
+    if (tabID) {
       /*Send REMOVE_TAB*/
       socketRef.current.emit(ACTIONS.REMOVE_TAB, {
         roomId,
         tabId: tabID,
       });
     }
-    
+
     //Rerender Editor
     setNewlyChangedTab(null);
   }
@@ -317,52 +331,52 @@ const EditorPage = () => {
   async function coppyRoomId() {
     try {
       await navigator.clipboard.writeText(roomId);
-      toast.success('Room ID has been coppied to your clipboard');
+      toast.success("Room ID has been coppied to your clipboard");
     } catch (error) {
-      toast.error('Couldn not copy the Room ID');
-    };
-  };
+      toast.error("Couldn not copy the Room ID");
+    }
+  }
   /* Leave room button */
   async function leaveRoom() {
     //check is last client?
     const isLastClient_ = await isLastClient(socketRef.current, roomId);
-    if(!isLastClient_) {
+    if (!isLastClient_) {
       //return Home page
-      reactNavigator('/');
+      reactNavigator("/");
       return;
     }
     // popup save code for last client
     const result = await templateSaveCode();
-    if(result.isDismissed){
+    if (result.isDismissed) {
       return;
     }
     //Save code
-    else if(result.isConfirmed){
+    else if (result.isConfirmed) {
       const data = await getStatusSaveRoom(socketRef.current, roomId, true);
-      if(data.status === '201'){
-        await templateSaveRoomSuccess(reactNavigator, roomId)
-      }
-      else if(data.status === 'error') {
-        await templateSaveRoomError(data.message)
+      if (data.status === "201") {
+        await templateSaveRoomSuccess(reactNavigator, roomId);
+      } else if (data.status === "error") {
+        await templateSaveRoomError(data.message);
       }
       return;
     }
     //Don't Save code
     else {
       const data = await getStatusSaveRoom(socketRef.current, roomId, false);
-      if(data.status === '200') {
-        reactNavigator('/');
+      if (data.status === "200") {
+        reactNavigator("/");
         return;
-      }
-      else{
-        await templateSaveRoomError('Have some problems during clean code, Please try again!')
+      } else {
+        await templateSaveRoomError(
+          "Have some problems during clean code, Please try again!"
+        );
       }
     }
-  };
+  }
   /* Handle File Changed */
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
-  
+
     if (file) {
       // Check if the file size is within the acceptable range
       if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
@@ -370,7 +384,7 @@ const EditorPage = () => {
         return;
       }
       //chek if type of file is not html, css or javascript
-      if (getFileTypeFromMimeType(file.type) === 'unknown') {
+      if (getFileTypeFromMimeType(file.type) === "unknown") {
         toast.error(`Unknown file type ${file.type}`);
         return;
       }
@@ -385,19 +399,19 @@ const EditorPage = () => {
           contents: fileContents,
         };
 
-        console.log('file Details::', fileDetails);
+        console.log("file Details::", fileDetails);
 
         //Create New tab
         let tab = {
-          roomId, 
-          tabID: uuidV4().toString(), 
-          title: getFileNameWithoutExtension(fileDetails.name), 
-          type: getFileTypeFromMimeType(fileDetails.type), 
-          value: fileDetails.contents, 
-          createdByUser: socketRef.current.id /* socketID */
-        }
+          roomId,
+          tabID: uuidV4().toString(),
+          title: getFileNameWithoutExtension(fileDetails.name),
+          type: getFileTypeFromMimeType(fileDetails.type),
+          value: fileDetails.contents,
+          createdByUser: socketRef.current.id /* socketID */,
+        };
 
-        console.log('uploading file::', tab);
+        console.log("uploading file::", tab);
 
         /*Send ADD_TAB*/
         await socketRef.current.emit(ACTIONS.ADD_TAB, {
@@ -420,79 +434,103 @@ const EditorPage = () => {
   /*Show Editor for first tab and created tab */
   function showEditorFirstTab(socketRef, tabID = null) {
     let tab = null;
-    if(tabID){
+    if (tabID) {
       //get class of the newly created tab
       tab = document.getElementById(tabID);
-    }
-    else{
+    } else {
       //get first tab
-      tab = document.getElementsByClassName('tabBtn')?.[0];
+      tab = document.getElementsByClassName("tabBtn")?.[0];
     }
     //active and show
-    if(tab){
-      activeTab(null,tab);
-      showEditor(socketRef, tab.id)
+    if (tab) {
+      activeTab(null, tab);
+      showEditor(socketRef, tab.id);
     }
   }
 
   /*----USEEFFECT AREA----*/
   /*Add Event Listener for editor side bar  */
   useEffect(() => {
-    const sidebarElement = document.getElementsByClassName('editorSidebar')[0];
+    const sidebarElement = document.getElementsByClassName("editorSidebar")[0];
 
     if (sidebarElement) {
       // create Editor Component when click on tab
-      sidebarElement.addEventListener('click', handleClick);
+      sidebarElement.addEventListener("click", handleClick);
     }
 
     return () => {
       if (sidebarElement) {
-        sidebarElement.removeEventListener('click', handleClick);
+        sidebarElement.removeEventListener("click", handleClick);
       }
     };
   }, [loading]);
   /*Add right click menu for tab */
-  useEffect(()=> {
+  useEffect(() => {
     const myMenu = [
       {
-        label: 'Edit',
-        callback: async(e) => {
+        label: "Edit",
+        callback: async (e) => {
           // Get TabID
           let tabID = null;
-          if(e.target.id){
-            tabID = e.target.id
-          }
-          else {
-            tabID = e.target.closest('.tabBtn').id;
+          if (e.target.id) {
+            tabID = e.target.id;
+          } else {
+            tabID = e.target.closest(".tabBtn").id;
           }
           //get current tab data
-          let curentTabName = getFileNameWithoutExtension(e.target.closest('.tabBtn').querySelector('.tabTitle').innerText);
-          let currentTabType = e.target.closest('.tabBtn').getAttribute('datatype');
+          let curentTabName = getFileNameWithoutExtension(
+            e.target.closest(".tabBtn").querySelector(".tabTitle").innerText
+          );
+          let currentTabType = e.target
+            .closest(".tabBtn")
+            .getAttribute("datatype");
           // Create toast for input new tab name
           toast((t) => (
             <div>
-              <span style={{fontSize:"12px", fontWeight:"bold"}}>Edit your tab</span>
-              <br/>
-              <input id="newTabName" type="text" placeholder={curentTabName || 'Enter new tab name'}/>
+              <span style={{ fontSize: "12px", fontWeight: "bold" }}>
+                Edit your tab
+              </span>
+              <br />
+              <input
+                id="newTabName"
+                type="text"
+                placeholder={curentTabName || "Enter new tab name"}
+              />
 
               <select name="Type:" id="chooseType">
-                <option value={null} title={currentTabType}>Current Type</option>
-                <option value="xml" title="xml">HTML</option>
-                <option value="javascript" title="javascript">JS</option>
-                <option value="babel" title="babel">JS for React</option>
-                <option value="css" title="css">CSS</option>
+                <option value={null} title={currentTabType}>
+                  Current Type
+                </option>
+                <option value="xml" title="xml">
+                  HTML
+                </option>
+                <option value="javascript" title="javascript">
+                  JS
+                </option>
+                <option value="babel" title="babel">
+                  JS for React
+                </option>
+                <option value="css" title="css">
+                  CSS
+                </option>
               </select>
 
-              <button onClick={
-                () => {
-                  let newTabName = document.getElementById('newTabName').value || curentTabName;
-                  let newType = (document.getElementById('chooseType').value === 'Current Type') ? currentTabType : document.getElementById('chooseType').value
+              <button
+                onClick={() => {
+                  let newTabName =
+                    document.getElementById("newTabName").value ||
+                    curentTabName;
+                  let newType =
+                    document.getElementById("chooseType").value ===
+                    "Current Type"
+                      ? currentTabType
+                      : document.getElementById("chooseType").value;
                   if (tabID) {
                     let editData = {
                       roomId,
                       tabId: tabID,
                       newTabName,
-                      newType
+                      newType,
                     };
                     /*Send RENAME_TAB*/
                     socketRef.current.emit(ACTIONS.EDIT_TAB, editData);
@@ -500,100 +538,105 @@ const EditorPage = () => {
                     toast.dismiss(t.id);
                     //set show Editor
                     setNewlyChangedTab(tabID);
+                  } else {
+                    document.getElementById("newTabName").placeholder =
+                      "Please enter a tab name!";
+                    document.getElementById("newTabName").style =
+                      "border: 2px solid red;";
                   }
-                  else {
-                    document.getElementById('newTabName').placeholder = "Please enter a tab name!";
-                    document.getElementById('newTabName').style = 'border: 2px solid red;';
-                  }
-                }
-              }>Submit</button>
+                }}
+              >
+                Submit
+              </button>
             </div>
           ));
         },
       },
-      'hr', // separator
+      "hr", // separator
       {
-        label: 'Close',
-        callback: async(e) => {
+        label: "Close",
+        callback: async (e) => {
           // Get TabID
           let tabID = null;
-          if(e.target.id && e.target.id !== 'closeTab-icon'){
-            tabID = e.target.id
-          }
-          else {
-            tabID = e.target.closest('.tabBtn').id;
+          if (e.target.id && e.target.id !== "closeTab-icon") {
+            tabID = e.target.id;
+          } else {
+            tabID = e.target.closest(".tabBtn").id;
           }
 
           // Send remove tab info
-          if(tabID){
+          if (tabID) {
             await closeTab(null, tabID);
-          }else{
+          } else {
             await closeTab(e, null);
           }
         },
       },
-    ]
+    ];
 
-    let myTabs = document.getElementsByClassName('btn tabBtn');
-    for (let i = 0; i< myTabs.length; i++) {
+    let myTabs = document.getElementsByClassName("btn tabBtn");
+    for (let i = 0; i < myTabs.length; i++) {
       new VanillaContextMenu({
         scope: myTabs[i],
         menuItems: myMenu,
-        customClass: 'tabMenu',
+        customClass: "tabMenu",
       });
     }
-    
-  }, [loading, tabs])
+  }, [loading, tabs]);
   /*Add right click menu for create tab button and editor sidebar */
   useEffect(() => {
     const myMenu = [
       {
-        label: 'Create new tab',
-        callback: async(e)=>{
+        label: "Create new tab",
+        callback: async (e) => {
           createNewTab();
         },
       },
-      'hr',
+      "hr",
       {
-        label: 'Upload from device',
-        callback: async(e) => {
+        label: "Upload from device",
+        callback: async (e) => {
           // Trigger click on hidden file input
-          const fileInput = document.getElementById('fileInput');
+          const fileInput = document.getElementById("fileInput");
           if (fileInput) {
-            fileInput.click(); 
+            fileInput.click();
           }
         },
       },
-    ]
+    ];
 
-    let createbtn = document.getElementsByClassName('btn createTabBtn');
-    let editorSidebar = document.getElementsByClassName('editorSidebar');
+    let createbtn = document.getElementsByClassName("btn createTabBtn");
+    let editorSidebar = document.getElementsByClassName("editorSidebar");
 
-    if(createbtn.length && editorSidebar.length){
+    if (createbtn.length && editorSidebar.length) {
       //create right click menu for createTabBtn
       new VanillaContextMenu({
         scope: createbtn[0],
         menuItems: myMenu,
-        customClass: 'tabMenu',
+        customClass: "tabMenu",
       });
       //create right click menu for editorSidebar
       new VanillaContextMenu({
         scope: editorSidebar[0],
         menuItems: myMenu,
-        customClass: 'tabMenu',
+        customClass: "tabMenu",
       });
     }
-
-  },[loading, tabs])
+  }, [loading, tabs]);
   /*Show Edit for first loading*/
   useEffect(() => {
-    if(newlyChangedTab){
+    if (newlyChangedTab) {
       showEditorFirstTab(socketRef, newlyChangedTab);
-    }
-    else {
+    } else {
       showEditorFirstTab(socketRef);
     }
-  },[tabs])
+  }, [tabs]);
+  /* */
+  const handleRightIcon = () =>{
+    window.parent.postMessage({ 
+      type: 'reload'
+    }, '*');
+  }
 
   return (
     <div>
@@ -601,69 +644,97 @@ const EditorPage = () => {
         <Modal
           onOptionClick={handleOptionClick}
           onClose={() => {
-            reactNavigator('/')
+            reactNavigator("/");
           }}
         />
       )}
 
-      {!showModal && loading ? (<LoadingSpinner />):
-      (<div className="mainWrap">
-        <div className="aside">
-          <div className="asideInner">
-            <div className="logo">
-              <img className="logoEditor" src="/logoRe.png" alt="logo"></img>
+      {!showModal && loading ? (
+        <LoadingSpinner />
+      ) : (
+        <div className="mainWrap">
+          <div className="aside">
+            <div className="asideInner">
+              <div className="logo">
+                <img className="logoEditor" src="/logoRe.png" alt="logo"></img>
+              </div>
+              <h3>Connected</h3>
+              <div className="clientsList">
+                {clients.map((client, index) => (
+                  <Client
+                    key={index}
+                    username={client.username}
+                    clientID={client.socketID}
+                  />
+                ))}
+              </div>
             </div>
-            <h3>Connected</h3>
-            <div className="clientsList">
-              {
-                clients.map((client, index) => (
-                  <Client key={index} username={client.username} clientID={client.socketID}/>
-                ))
-              }
-            </div>
+            <button className="btn shareBtn" onClick={coppyRoomId}>
+              Share RoomID
+            </button>
+            <button className="btn leaveBtn" onClick={leaveRoom}>
+              Leave
+            </button>
           </div>
-          <button className="btn shareBtn" onClick={coppyRoomId}>Share RoomID</button>
-          <button className="btn leaveBtn" onClick={leaveRoom}>Leave</button>
-        </div>
 
-        <div className="editorWrap">
-          {/* Side Bar */}
-          <div className="editorSidebar">
-            {
-              tabs.map(tab => (
+          <div className="editorWrap">
+            {/* Side Bar */}
+            <div className="editorSidebar">
+              {tabs.map((tab) => (
                 <Tab key={tab.tabID} tab={tab} />
-              ))
-            }
-            <div className='tagCreate'>
-              <button className="btn createTabBtn"><AiOutlinePlus id="createTab-icon" /></button>
-            </div>
-            <input
+              ))}
+              <div className="tagCreate">
+                <button className="btn createTabBtn">
+                  <AiOutlinePlus id="createTab-icon" title="Create new tab"/>
+                </button>
+              </div>
+              <input
                 id="fileInput"
                 type="file"
-                style={{ display: 'none' }}
+                style={{ display: "none" }}
                 onChange={handleFileChange}
-            />
-          </div>
-
-          {/* Content */}
-          <Split 
-            className="editorContent"
-            sizes={[60, 40]}
-            minSize={250}
-            gutterSize={3}
-          >
-            {/* Space */}
-            <div className="editorSpace" id="left-panel"></div>
-            {/* Output */}
-            <div className="outputSpace" id="right-panel">
-              {socketRef.current !== null && <Output socketRef={socketRef} roomId={roomId}/>}
+              />
             </div>
-          </Split>
 
+            {/* Content */}
+            <Split
+              className="editorContent"
+              sizes={[60, 40]}
+              minSize={250}
+              gutterSize={3}
+            >
+              {/* Editor */}
+              <Split
+                direction="vertical"
+                sizes={[100, 0]}
+                // minSize={10}
+                // maxSize={500}
+                gutterSize={3}
+                cursor="row-resize"
+              >
+                <div className="editorSpace" id="left-panel"></div>
+                <div className="console-container" id="console-container" ref={consoleContainerRef}>
+                  <div className="consoleTaskbar">
+                    <span className="consoleTitle">Console</span>
+                    <div className="rightIcon">
+                      <VscTrash className="outputIcon" title="Clean terminal" onClick={handleRightIcon}/>
+                    </div>
+                  </div>
+                  <Console/>
+                </div>
+              </Split>
+              {/* Output */}
+              <div className="outputSpace" id="right-panel">
+                {socketRef.current !== null && (
+                  <Output socketRef={socketRef} roomId={roomId}/>
+                )}
+              </div>
+            </Split>
+          </div>
         </div>
-      </div>)}
+      )}
     </div>
-  )
-}
+  );
+};
 
-export default EditorPage
+export default memo(EditorPage);
