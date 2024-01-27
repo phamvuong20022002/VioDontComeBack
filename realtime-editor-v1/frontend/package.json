@@ -3,13 +3,15 @@
   "version": "0.1.1",
   "private": true,
   "dependencies": {
+    "@monaco-editor/react": "^4.6.0",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "bootstrap": "^5.3.2",
     "codemirror": "^5.65.15",
-    "express": "^4.18.2",
     "lodash": "^4.17.21",
+    "monaco-editor": "^0.45.0",
+    "monaco-editor-webpack-plugin": "^7.1.0",
     "pure-context-menu": "^1.2.7",
     "react": "^18.2.0",
     "react-avatar": "^5.0.3",
@@ -27,10 +29,8 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "start:front": "npm run build && npm run server:prod",
+    "start:front": "npm run build && node server/server.js",
     "build": "react-scripts build",
-    "server:dev": "nodemon server.js",
-    "server:prod": "node server.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -53,6 +53,7 @@
     ]
   },
   "devDependencies": {
+    "express": "^4.18.2",
     "nodemon": "^3.0.1"
   }
 }

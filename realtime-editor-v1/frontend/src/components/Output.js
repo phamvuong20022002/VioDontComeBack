@@ -31,11 +31,11 @@ const Output = ({socketRef, roomId}) => {
   useEffect(() => {
     if(loading) return;
     //add listener for taskbars
-    const rightIcon = document.getElementsByClassName('rightIcon monitor');
-    rightIcon[0]?.addEventListener('click', (e)=>{
-      e.preventDefault();
-      handleRightIcon(e);
-    })
+    // const rightIcon = document.getElementsByClassName('rightIcon monitor');
+    // rightIcon[0]?.addEventListener('click', (e)=>{
+    //   e.preventDefault();
+    //   handleRightIcon(e);
+    // })
     //add listener for Output button (Run button)
     let btn = document.getElementById('outputBtn')
     btn.addEventListener('click', () => {
@@ -43,12 +43,13 @@ const Output = ({socketRef, roomId}) => {
     })
 
     return () => {
-      if(rightIcon && btn){
-        rightIcon?.[0]?.removeEventListener('click', handleRightIcon);
-        btn.removeEventListener('click', addTabsToForm);
-      }
+      // if(rightIcon && btn){
+      //   rightIcon?.[0]?.removeEventListener('click', handleRightIcon);
+      //   btn.removeEventListener('click', addTabsToForm);
+      // }
+      btn.removeEventListener('click', addTabsToForm);
     };
-  }, [selectedTabs, loading]);
+  }, [loading]);
 
   useEffect(() => {
     //function get code have tabIds in selectedTabs array
@@ -138,6 +139,7 @@ const Output = ({socketRef, roomId}) => {
   };
   // Add listeners for rightIcon class
   function handleRightIcon(e){
+    console.log('E::', e.target.className);
     if(e.target){
       if(e.target.id === null){
         return ;
@@ -202,7 +204,7 @@ const Output = ({socketRef, roomId}) => {
               <VscDebugStart className="outputIcon" id="outputBtn" onClick={toggleSelect} title="Debug Start With..."/>
               <span className="outputTitle">Monitor</span>
               
-              <div className="rightIcon monitor"> 
+              <div className="rightIcon monitor" onClick={handleRightIcon}> 
                 <VscTerminal className="outputIcon" id="terminal-icon" title="Display console monitor"/>
                 <VscRefresh className="outputIcon" id="reload-icon" title="Reload monitor"/>
                 <VscCloudDownload  className="outputIcon" id="export-icon" title="Export current code"/>
@@ -216,7 +218,7 @@ const Output = ({socketRef, roomId}) => {
                   id="monitor"
                   srcDoc={previewFrame}
                   title="output"
-                  sandbox="allow-same-origin allow-scripts allow-forms"
+                  sandbox="allow-same-origin allow-scripts allow-forms allow-top-navigation"
                   width="100%"
                   height="100%"
                   frameBorder="0"

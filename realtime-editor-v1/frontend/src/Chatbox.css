@@ -1,0 +1,59 @@
+.chatbox-container {
+    position: absolute;
+    overflow: hidden;
+    width: 38%;
+    height: 94vh;
+    /* border: 2px solid red; */
+    top: 6vh;
+    right: 0;
+    transition: z-index 0.35s ease-in-out;
+}
+
+.slide-box {
+    color: white;
+    position: absolute;
+    top: 0;
+    right: -83vh;
+    /* Start off-screen */
+    width: 83vh;
+    height: 100%;
+    background-color: #1c1e29;
+    transition: right 0.3s ease;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    border: 3px solid #282a36;
+}
+
+.slide-box.open {
+    right: 0;
+}
+
+.chatbox-taskbar {
+    display: grid;
+    grid-template-columns: 20% 60% 20%;
+    background: #1c1e29;
+    border-bottom: 1px solid #424242;
+    color: #eee;
+    height: 35px;
+    width: 100%;
+    align-items: center;
+    /* margin-top: 5px; */
+}
+
+.chatBox-icon {
+    font-size: 18px;
+    padding-left: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+}
+
+.chatBox-icon:hover {
+    color: #9b9b9b;
+}
+
+.chatBox-title {
+    text-align: center;
+}
+
+#newChat-icon{
+    padding-left: 10px;
+}

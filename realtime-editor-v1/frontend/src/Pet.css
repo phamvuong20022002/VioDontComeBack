@@ -1,0 +1,179 @@
+#draggable-circle {
+    width: 60px;
+    height: 60px;
+    /* background-color: #3498db; */
+    border-radius: 50%;
+    position: absolute;
+    z-index: 5;
+    top: 50%;
+    left: 5%;
+    cursor: pointer;
+    justify-items: center;
+    align-items: center;
+    user-select: none;
+    animation: bounce 0.8s alternate infinite ease-in-out;
+}
+
+/* Disable pointer events for the draggable circle */
+#draggable-circle.no-drag {
+    pointer-events: none;
+}
+
+#draggable-circle:hover {
+    animation: 0.5s ease infinite alternate running shimmer;
+}
+
+.pet-container {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: 3s ease infinite alternate running shimmer;
+}
+
+.pet-container img {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+
+#draggable-circle:hover .pet-options {
+    display: block;
+}
+
+.rotate-infinite {
+    animation: rotate 60s linear infinite;
+}
+
+.bounce-infinite {
+    animation: bounce 1s alternate infinite ease-in-out
+}
+
+.menu-toggler {
+    position: absolute;
+    display: block;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    margin: auto;
+    width: 40px;
+    height: 40px;
+    z-index: 5;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.menu-toggler:checked~ul .menu-item {
+    opacity: 1;
+}
+
+.menu-toggler:checked~ul .menu-item:nth-child(1) {
+    transform: rotate(120deg) translate(-100px);
+}
+
+.menu-toggler:checked~ul .menu-item:nth-child(2) {
+    transform: rotate(180deg) translateX(-100px);
+}
+
+.menu-toggler:checked~ul .menu-item:nth-child(3) {
+    transform: rotate(240deg) translateX(-100px);
+}
+
+.menu-toggler:checked~ul .menu-item:nth-child(4) {
+    transform: rotate(300deg) translateX(-100px);
+}
+
+.menu-toggler:checked~ul .menu-item:nth-child(5) {
+    transform: rotate(360deg) translateX(-100px);
+}
+
+.menu-toggler:checked~ul .menu-item:nth-child(6) {
+    transform: rotate(60deg) translateX(-100px);
+}
+
+
+
+.menu-item:nth-child(1) img {
+    transform: rotate(180deg);
+}
+
+.menu-item:nth-child(2) img {
+    transform: rotate(120deg);
+}
+
+.menu-item:nth-child(3) img {
+    transform: rotate(60deg);
+}
+
+.menu-item:nth-child(4) img {
+    transform: rotate(120deg);
+}
+
+.menu-item:nth-child(5) img {
+    transform: rotate(0deg);
+}
+
+.menu-item:nth-child(6) img {
+    transform: rotate(-60deg);
+}
+
+.menu-item {
+    position: absolute;
+    display: block;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+    opacity: 0;
+    transition: 0.5s;
+}
+
+.menu-item button {
+    border-radius: 50%;
+    text-decoration: none;
+    transition: 0.5s;
+    border: none;
+    justify-items: center;
+}
+
+.menu-item button img{
+    width: 58px;
+    pointer-events: none;
+}
+
+.menu-item button:hover {
+    background: rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    animation: 0.5s ease infinite alternate running shimmer;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes shimmer {
+    to {
+        background-size: 100% 100%;
+        box-shadow: -2px -2px 6px rgba(255, 227, 126, 0.5), 2px 2px 6px rgba(144, 148, 255, 0.5);
+    }
+}
+
+@keyframes bounce {
+    from {
+        transform: translateY(-1px);
+    }
+
+    to {
+        transform: translateY(4px);
+    }
+}

@@ -8,9 +8,11 @@ import {
 import ReactDOM from "react-dom/client";
 import Client from "../components/Client";
 import Tab from "../components/Tab";
-import Editor from "../components/Editor";
+// import Editor from "../components/Editor";
+// import Editor from "@monaco-editor/react";
+import MonacoEditor from "../components/Editor_v2.js";
+// import MonacoEditor from "../components/Editor_v3.js";
 import Output from "../components/Output";
-// import Editor_v2 from '../components/Editor_v2';
 import { AiOutlinePlus } from "react-icons/ai";
 import { initSocket } from "../socket";
 import ACTIONS from "../Actions";
@@ -40,6 +42,7 @@ import { ROOMSTATUS, ROOMOPTIONS } from "../Status.js";
 import { toastNewTab } from "../assets/toasts/create_new_tab.toast.js";
 import Console from "../components/Console.js";
 import { VscTrash } from "react-icons/vsc";
+import Pet from "../components/Pet.js";
 
 const EditorPage = () => {
   const socketRef = useRef(null);
@@ -49,6 +52,7 @@ const EditorPage = () => {
   const { roomId } = useParams();
   const [clients, setClients] = useState([]);
   const [tabs, setTabs] = useState([]);
+  const [tab, setTab] = useState('null');
   const [loading, setLoading] = useState(true);
   const [fileContents, setFileContents] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -173,7 +177,9 @@ const EditorPage = () => {
     });
 
     editorSpace.current.render(
-      <Editor
+      // <div className="monaco-editor"></div>
+
+      <MonacoEditor
         socketRef={socketRef}
         roomId={roomId}
         tab={tab}
@@ -181,6 +187,14 @@ const EditorPage = () => {
           codeRef.current = code;
         }}
       />
+      // <Editor
+      //   socketRef={socketRef}
+      //   roomId={roomId}
+      //   tab={tab}
+      //   onCodeChange={(code) => {
+      //     codeRef.current = code;
+      //   }}
+      // />
     );
   }
   /*Request Tad Data for Rendering Editor */
@@ -194,6 +208,7 @@ const EditorPage = () => {
 
     await socketRef.current.on(ACTIONS.GET_TAB, ({ tab }) => {
       renderEditor(tab);
+      // setTab(tab);
     });
   }
   /* Active tab function */
@@ -623,6 +638,7 @@ const EditorPage = () => {
       });
     }
   }, [loading, tabs]);
+
   /*Show Edit for first loading*/
   useEffect(() => {
     if (newlyChangedTab) {
@@ -651,85 +667,93 @@ const EditorPage = () => {
 
       {!showModal && loading ? (
         <LoadingSpinner />
-      ) : (
-        <div className="mainWrap">
-          <div className="aside">
-            <div className="asideInner">
-              <div className="logo">
-                <img className="logoEditor" src="/logoRe.png" alt="logo"></img>
+      ) :(
+        <div>
+          <Pet/>
+          <div className="mainWrap">
+            <div className="aside">
+              <div className="asideInner">
+                <div className="logo">
+                  <img className="logoEditor" src="/logoRe.png" alt="logo"></img>
+                </div>
+                <h3>Connected</h3>
+                <div className="clientsList">
+                  {clients.map((client, index) => (
+                    <Client
+                      key={index}
+                      username={client.username}
+                      clientID={client.socketID}
+                    />
+                  ))}
+                </div>
               </div>
-              <h3>Connected</h3>
-              <div className="clientsList">
-                {clients.map((client, index) => (
-                  <Client
-                    key={index}
-                    username={client.username}
-                    clientID={client.socketID}
-                  />
+              <button className="btn shareBtn" onClick={coppyRoomId}>
+                Share RoomID
+              </button>
+              <button className="btn leaveBtn" onClick={leaveRoom}>
+                Leave
+              </button>
+            </div>
+
+            <div className="editorWrap">
+              {/* Side Bar */}
+              <div className="editorSidebar">
+                {tabs.map((tab) => (
+                  <Tab key={tab.tabID} tab={tab} />
                 ))}
+                <div className="tagCreate">
+                  <button className="btn createTabBtn">
+                    <AiOutlinePlus id="createTab-icon" title="Create new tab"/>
+                  </button>
+                </div>
+                <input
+                  id="fileInput"
+                  type="file"
+                  style={{ display: "none" }}
+                  onChange={handleFileChange}
+                />
               </div>
-            </div>
-            <button className="btn shareBtn" onClick={coppyRoomId}>
-              Share RoomID
-            </button>
-            <button className="btn leaveBtn" onClick={leaveRoom}>
-              Leave
-            </button>
-          </div>
 
-          <div className="editorWrap">
-            {/* Side Bar */}
-            <div className="editorSidebar">
-              {tabs.map((tab) => (
-                <Tab key={tab.tabID} tab={tab} />
-              ))}
-              <div className="tagCreate">
-                <button className="btn createTabBtn">
-                  <AiOutlinePlus id="createTab-icon" title="Create new tab"/>
-                </button>
-              </div>
-              <input
-                id="fileInput"
-                type="file"
-                style={{ display: "none" }}
-                onChange={handleFileChange}
-              />
-            </div>
 
-            {/* Content */}
-            <Split
-              className="editorContent"
-              sizes={[60, 40]}
-              minSize={250}
-              gutterSize={3}
-            >
-              {/* Editor */}
+              {/* Content */}
               <Split
-                direction="vertical"
-                sizes={[100, 0]}
-                // minSize={10}
-                // maxSize={500}
+                className="editorContent"
+                sizes={[60, 40]}
+                minSize={250}
                 gutterSize={3}
-                cursor="row-resize"
               >
-                <div className="editorSpace" id="left-panel"></div>
-                <div className="console-container" id="console-container" ref={consoleContainerRef}>
-                  <div className="consoleTaskbar">
-                    <span className="consoleTitle">Console</span>
-                    <div className="rightIcon">
-                      <VscTrash className="outputIcon" title="Clean terminal" onClick={handleRightIcon}/>
+
+                <Split
+                  direction="vertical"
+                  sizes={[100, 0]}
+                  // minSize={10}
+                  // maxSize={500}
+                  gutterSize={3}
+                  cursor="row-resize"
+                >
+                  {/* Editor */}
+                  <div className="editorSpace" id="left-panel"></div>
+
+                  {/* Console */}
+                  <div className="console-container" id="console-container" ref={consoleContainerRef}>
+                    <div className="consoleTaskbar">
+                      <span className="consoleTitle">Console</span>
+                      <div className="rightIcon">
+                        <VscTrash className="outputIcon" title="Clean terminal" onClick={handleRightIcon}/>
+                      </div>
                     </div>
+                    <Console/>
                   </div>
-                  <Console/>
+                </Split>
+
+                {/* Output */}
+                <div className="outputSpace" id="right-panel">
+                  {socketRef.current !== null && (
+                    <Output socketRef={socketRef} roomId={roomId}/>
+                  )}
                 </div>
               </Split>
-              {/* Output */}
-              <div className="outputSpace" id="right-panel">
-                {socketRef.current !== null && (
-                  <Output socketRef={socketRef} roomId={roomId}/>
-                )}
-              </div>
-            </Split>
+            </div>
           </div>
         </div>
       )}
@@ -738,3 +762,4 @@ const EditorPage = () => {
 };
 
 export default memo(EditorPage);
+

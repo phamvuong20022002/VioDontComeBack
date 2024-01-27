@@ -1,3 +1,9 @@
+/* fix error: ResizeObserver loop completed with undelivered notifications */
+iframe#webpack-dev-server-client-overlay{
+  display:none!important
+}
+
+
 /* width */
 ::-webkit-scrollbar{
   width: 8px;
@@ -186,10 +192,18 @@ input:focus::placeholder {
 }
 
 .editorSpace{
+  position: relative;
   background-color: #282a36;
 }
 
-.CodeMirror {
+/* .CodeMirror {
+  min-height: 94vh;
+  max-width: 120vh;
+  font-size: 16px;
+  box-sizing: border-box;
+} */
+
+.monaco-editor{
   min-height: 94vh;
   max-width: 120vh;
   font-size: 16px;
@@ -217,8 +231,8 @@ input:focus::placeholder {
   overflow-y: auto;
   background-color: #282a36;
   /* background-color: red; */
-  /* max-height: 400px; */
-  transition: transform 0.3s ease;
+  max-height: 74.2vh;
+  transition: transform 0.5s ease;
 }
 
 .console-container .consoleTaskbar{

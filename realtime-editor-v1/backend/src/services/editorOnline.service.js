@@ -200,6 +200,7 @@ class EditorOnlineService {
             }
             //SEND CODE
             socket.in(roomId).emit(ACTIONS.CODE_CHANGE, {tabId, code});
+            // global._io.to(roomId).emit(ACTIONS.CODE_CHANGE, {tabId, code});
         });
 
         //SYNC CODE
