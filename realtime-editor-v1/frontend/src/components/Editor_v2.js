@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Editor from "@monaco-editor/react";
 import ACTIONS from "../Actions";
 
-const MonacoEditor = ({ socketRef, roomId, tab, onCodeChange }) => {
+const MonacoEditor = ({ socketRef, roomId, tab, onCodeChange, themeData}) => {
   const editorRef = useRef(null);
   const localChangeRef = useRef(false);
 
@@ -38,6 +38,8 @@ const MonacoEditor = ({ socketRef, roomId, tab, onCodeChange }) => {
     };
   });
 
+
+
   return (
     <Editor
       width="auto"
@@ -47,7 +49,8 @@ const MonacoEditor = ({ socketRef, roomId, tab, onCodeChange }) => {
           ? "javascript"
           : tab.type
       }
-      theme="vs-dark" // Change theme as needed
+      // theme="vs-dark" // Change theme as needed
+      theme={themeData}
       value={tab.value}
       options={{
         automaticLayout: true,

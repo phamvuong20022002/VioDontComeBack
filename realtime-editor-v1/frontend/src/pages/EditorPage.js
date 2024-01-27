@@ -9,9 +9,7 @@ import ReactDOM from "react-dom/client";
 import Client from "../components/Client";
 import Tab from "../components/Tab";
 // import Editor from "../components/Editor";
-// import Editor from "@monaco-editor/react";
 import MonacoEditor from "../components/Editor_v2.js";
-// import MonacoEditor from "../components/Editor_v3.js";
 import Output from "../components/Output";
 import { AiOutlinePlus } from "react-icons/ai";
 import { initSocket } from "../socket";
@@ -43,6 +41,8 @@ import { toastNewTab } from "../assets/toasts/create_new_tab.toast.js";
 import Console from "../components/Console.js";
 import { VscTrash } from "react-icons/vsc";
 import Pet from "../components/Pet.js";
+import { useMonaco } from "@monaco-editor/react";
+
 
 const EditorPage = () => {
   const socketRef = useRef(null);
@@ -52,7 +52,7 @@ const EditorPage = () => {
   const { roomId } = useParams();
   const [clients, setClients] = useState([]);
   const [tabs, setTabs] = useState([]);
-  const [tab, setTab] = useState('null');
+  const [tab, setTab] = useState("null");
   const [loading, setLoading] = useState(true);
   const [fileContents, setFileContents] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -60,6 +60,9 @@ const EditorPage = () => {
   const [newlyChangedTab, setNewlyChangedTab] = useState(null);
   const consoleContainerRef = useRef(null);
   const [reloadConsole, setReloadConsole] = useState(false);
+  const [themeData, setThemeData] = useState("vs-dark");
+  const monaco = useMonaco();
+
   // var editorSpace = null;
   const editorSpace = useRef(null);
 
@@ -186,15 +189,8 @@ const EditorPage = () => {
         onCodeChange={(code) => {
           codeRef.current = code;
         }}
+        themeData={themeData}
       />
-      // <Editor
-      //   socketRef={socketRef}
-      //   roomId={roomId}
-      //   tab={tab}
-      //   onCodeChange={(code) => {
-      //     codeRef.current = code;
-      //   }}
-      // />
     );
   }
   /*Request Tad Data for Rendering Editor */
@@ -462,6 +458,15 @@ const EditorPage = () => {
       showEditor(socketRef, tab.id);
     }
   }
+  /*Post message 'reload' to terminal*/
+  const handleRightIcon = () => {
+    window.parent.postMessage(
+      {
+        type: "reload",
+      },
+      "*"
+    );
+  };
 
   /*----USEEFFECT AREA----*/
   /*Add Event Listener for editor side bar  */
@@ -647,12 +652,18 @@ const EditorPage = () => {
       showEditorFirstTab(socketRef);
     }
   }, [tabs]);
-  /* */
-  const handleRightIcon = () =>{
-    window.parent.postMessage({ 
-      type: 'reload'
-    }, '*');
-  }
+  /*Load themes */
+  useEffect(() => {
+    const fetchTheme = async () => {
+      const response = await fetch("/themes/Cobalt2.json"); // Update the path accordingly
+      const data = await response.json();
+      if (data) {
+        monaco?.editor.defineTheme("customTheme", data);
+        setThemeData("customTheme");
+      }
+    };
+    fetchTheme();
+  }, [monaco]);
 
   return (
     <div>
@@ -667,14 +678,18 @@ const EditorPage = () => {
 
       {!showModal && loading ? (
         <LoadingSpinner />
-      ) :(
+      ) : (
         <div>
-          <Pet/>
+          <Pet />
           <div className="mainWrap">
             <div className="aside">
               <div className="asideInner">
                 <div className="logo">
-                  <img className="logoEditor" src="/logoRe.png" alt="logo"></img>
+                  <img
+                    className="logoEditor"
+                    src="/logoRe.png"
+                    alt="logo"
+                  ></img>
                 </div>
                 <h3>Connected</h3>
                 <div className="clientsList">
@@ -703,7 +718,7 @@ const EditorPage = () => {
                 ))}
                 <div className="tagCreate">
                   <button className="btn createTabBtn">
-                    <AiOutlinePlus id="createTab-icon" title="Create new tab"/>
+                    <AiOutlinePlus id="createTab-icon" title="Create new tab" />
                   </button>
                 </div>
                 <input
@@ -714,7 +729,6 @@ const EditorPage = () => {
                 />
               </div>
 
-
               {/* Content */}
               <Split
                 className="editorContent"
@@ -722,7 +736,6 @@ const EditorPage = () => {
                 minSize={250}
                 gutterSize={3}
               >
-
                 <Split
                   direction="vertical"
                   sizes={[100, 0]}
@@ -735,21 +748,29 @@ const EditorPage = () => {
                   <div className="editorSpace" id="left-panel"></div>
 
                   {/* Console */}
-                  <div className="console-container" id="console-container" ref={consoleContainerRef}>
+                  <div
+                    className="console-container"
+                    id="console-container"
+                    ref={consoleContainerRef}
+                  >
                     <div className="consoleTaskbar">
                       <span className="consoleTitle">Console</span>
                       <div className="rightIcon">
-                        <VscTrash className="outputIcon" title="Clean terminal" onClick={handleRightIcon}/>
+                        <VscTrash
+                          className="outputIcon"
+                          title="Clean terminal"
+                          onClick={handleRightIcon}
+                        />
                       </div>
                     </div>
-                    <Console/>
+                    <Console />
                   </div>
                 </Split>
 
                 {/* Output */}
                 <div className="outputSpace" id="right-panel">
                   {socketRef.current !== null && (
-                    <Output socketRef={socketRef} roomId={roomId}/>
+                    <Output socketRef={socketRef} roomId={roomId} />
                   )}
                 </div>
               </Split>
@@ -762,4 +783,3 @@ const EditorPage = () => {
 };
 
 export default memo(EditorPage);
-
