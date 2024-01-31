@@ -3,6 +3,7 @@ import "../Chatbox.css";
 import { TbNewSection, TbSettings } from "react-icons/tb";
 import { FiSend } from "react-icons/fi";
 import { FaUser, FaRegStopCircle } from "react-icons/fa";
+import { LuPanelRightClose } from "react-icons/lu";
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import { docco } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import Message from "./Message";
@@ -15,7 +16,7 @@ const examples = [
   "Using JS to create a function for checking emails.",
 ];
 
-const ChatBox = ({ isBoxOpen }) => {
+const ChatBox = ({ isBoxOpen, setIsBoxOpen }) => {
   /* Max z-index of monaco editor is 11*/
   const zIndex = isBoxOpen ? 12 : 0;
   const [inputValue, setInputValue] = useState("");
@@ -140,6 +141,12 @@ const ChatBox = ({ isBoxOpen }) => {
               className={`chatBox-icon ${isFetching ? 'disabled': ''} `}
               id="setting-icon"
               title="Settings"
+            />
+            <LuPanelRightClose 
+              className={`chatBox-icon ${isFetching ? 'disabled': ''} `}
+              id="setting-icon"
+              title="Settings"
+              onClick={() => setIsBoxOpen(false)}
             />
           </div>
         </div>

@@ -96,7 +96,7 @@ const Pet = () => {
 
   return (
     <div>
-      <ChatBox isBoxOpen={isBoxOpen} />
+      <ChatBox isBoxOpen={isBoxOpen} setIsBoxOpen={setIsBoxOpen}/>
       <div id="draggable-circle">
         <input className="menu-toggler" type="checkbox" id="menuToggle" />
         <div className="pet-container">
