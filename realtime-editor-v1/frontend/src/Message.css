@@ -1,0 +1,25 @@
+.blockCode-taskbar{
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem 1rem;
+    align-items: center;
+    background-color: #3a404b;
+    height: 5px;
+    border-top-right-radius: 5px;
+    border-top-left-radius: 5px;
+}
+
+.blockCode-taskbar button{
+    display: inline-flex;
+    padding: 0.25rem 0.25rem;
+    align-items: center;
+    gap: 0.25rem;
+    background-color: #3a404b;
+    color: white;
+    border: none ;
+    cursor: pointer;
+}
+
+.blockCode-taskbar button:hover{
+    color: #9b9b9b;
+}

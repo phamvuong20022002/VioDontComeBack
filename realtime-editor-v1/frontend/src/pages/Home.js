@@ -48,6 +48,12 @@ const Home = () => {
         }, 50);
     })
 
+    useEffect(() => {
+        if(roomID) {
+            document.getElementById('inputUsername')?.focus();
+        }
+    },[roomID])
+
   return (
     <div>
         { loading ? (<LoadingSpinner />):
@@ -63,9 +69,11 @@ const Home = () => {
                             onChange={(e)=>{setRoomID(e.target.value)}}
                             value={roomID}
                             onKeyUp={handleInputEnter}
+                            autoFocus={true}
                         />
 
                         <input 
+                            id="inputUsername"
                             type="text" 
                             className="inputBox" 
                             placeholder="USERNAME"

@@ -39,10 +39,10 @@ import Modal from "../assets/modal/Language.modal.2.js";
 import { ROOMSTATUS, ROOMOPTIONS } from "../Status.js";
 import { toastNewTab } from "../assets/toasts/create_new_tab.toast.js";
 import Console from "../components/Console.js";
-import { VscTrash } from "react-icons/vsc";
+import { PiBroomFill } from "react-icons/pi";
+import { LuPanelBottomClose } from "react-icons/lu";
 import Pet from "../components/Pet.js";
 import { useMonaco } from "@monaco-editor/react";
-
 
 const EditorPage = () => {
   const socketRef = useRef(null);
@@ -458,14 +458,23 @@ const EditorPage = () => {
       showEditor(socketRef, tab.id);
     }
   }
-  /*Post message 'reload' to terminal*/
-  const handleRightIcon = () => {
-    window.parent.postMessage(
-      {
-        type: "reload",
-      },
-      "*"
-    );
+  /*Post message 'clean' to terminal*/
+  const handleRightIcon = (e) => {
+    const idBtn = e.target?.closest('.outputIcon').id;
+    if(idBtn === 'clean-teminal'){
+      window.parent.postMessage(
+        {
+          type: "reload",
+        },
+        "*"
+      );
+    }
+    else if (idBtn === 'close-teminal'){
+      const consoleContainer = document.getElementById('console-container');
+      const leftPanel = document.getElementById('editor-space');
+      leftPanel.style.height = 'calc(90% - 1.5px)';
+      consoleContainer.style.height = 'calc(10% - 1.5px)';
+    }
   };
 
   /*----USEEFFECT AREA----*/
@@ -652,7 +661,7 @@ const EditorPage = () => {
       showEditorFirstTab(socketRef);
     }
   }, [tabs]);
-  /*Load themes */
+  /*Load Monaco Editor themes */
   useEffect(() => {
     const fetchTheme = async () => {
       const response = await fetch("/themes/Cobalt2.json"); // Update the path accordingly
@@ -733,7 +742,7 @@ const EditorPage = () => {
               <Split
                 className="editorContent"
                 sizes={[60, 40]}
-                minSize={250}
+                // minSize={250}
                 gutterSize={3}
               >
                 <Split
@@ -743,9 +752,10 @@ const EditorPage = () => {
                   // maxSize={500}
                   gutterSize={3}
                   cursor="row-resize"
+                  id="left-panel"
                 >
                   {/* Editor */}
-                  <div className="editorSpace" id="left-panel"></div>
+                  <div className="editorSpace" id="editor-space"></div>
 
                   {/* Console */}
                   <div
@@ -755,11 +765,16 @@ const EditorPage = () => {
                   >
                     <div className="consoleTaskbar">
                       <span className="consoleTitle">Console</span>
-                      <div className="rightIcon">
-                        <VscTrash
+                      <div className="rightIcon" onClick={handleRightIcon}>
+                        <PiBroomFill
                           className="outputIcon"
                           title="Clean terminal"
-                          onClick={handleRightIcon}
+                          id="clean-teminal"
+                        />
+                        <LuPanelBottomClose
+                          className="outputIcon"
+                          title="Clean terminal"
+                          id="close-teminal"
                         />
                       </div>
                     </div>

@@ -30,12 +30,6 @@ const Output = ({socketRef, roomId}) => {
   // Add listener for components
   useEffect(() => {
     if(loading) return;
-    //add listener for taskbars
-    // const rightIcon = document.getElementsByClassName('rightIcon monitor');
-    // rightIcon[0]?.addEventListener('click', (e)=>{
-    //   e.preventDefault();
-    //   handleRightIcon(e);
-    // })
     //add listener for Output button (Run button)
     let btn = document.getElementById('outputBtn')
     btn.addEventListener('click', () => {
@@ -43,10 +37,6 @@ const Output = ({socketRef, roomId}) => {
     })
 
     return () => {
-      // if(rightIcon && btn){
-      //   rightIcon?.[0]?.removeEventListener('click', handleRightIcon);
-      //   btn.removeEventListener('click', addTabsToForm);
-      // }
       btn.removeEventListener('click', addTabsToForm);
     };
   }, [loading]);
@@ -94,12 +84,14 @@ const Output = ({socketRef, roomId}) => {
 
   /*----FUNCTION AREA----*/
   // toggle select from check boxs
-  const toggleSelect = () => {
+  const toggleSelect = (e) => {
     setDisplaySelect(!displaySelect);
+    rotateIcon(e.target?.closest('#outputBtn'));
+
   };
   // rotate 90 output Button
   function rotateIcon(btn) {
-    btn.classList.toggle('rotate-90');
+    btn?.classList.toggle('rotate-90');
   }
   //Get all chosen tabs
   const handleTabChange = (tabID) => {
@@ -120,7 +112,6 @@ const Output = ({socketRef, roomId}) => {
     else{
       button.classList.remove('inactiveicon');
     }
-    // button.style.background = 'red';
   }
   // Add tabs to select input form
   const addTabsToForm = () => {
@@ -139,7 +130,6 @@ const Output = ({socketRef, roomId}) => {
   };
   // Add listeners for rightIcon class
   function handleRightIcon(e){
-    console.log('E::', e.target.className);
     if(e.target){
       if(e.target.id === null){
         return ;
@@ -165,7 +155,7 @@ const Output = ({socketRef, roomId}) => {
       }
       else if(e.target.id === 'terminal-icon'){
         const consoleContainer = document.getElementById('console-container');
-        const leftPanel = document.getElementById('left-panel');
+        const leftPanel = document.getElementById('editor-space');
         leftPanel.style.height = 'calc(50% - 1.5px)';
         consoleContainer.style.height = 'calc(50% - 1.5px)';
       }

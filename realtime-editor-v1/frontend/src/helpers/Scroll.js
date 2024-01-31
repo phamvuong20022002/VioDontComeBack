@@ -2,7 +2,7 @@
 const scrollToBottom = (id, loading) => {
   if (loading) return;
   var container = document.getElementById(id);
-  container.scrollTop = container.scrollHeight;
+  container.scrollTop = container?.scrollHeight;
 }
 
 module.exports = {

@@ -3,7 +3,7 @@
   "version": "0.1.1",
   "private": true,
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "dependencies": {
     "compression": "^1.7.4",
     "cors": "^2.8.5",
@@ -11,6 +11,7 @@
     "express": "^4.18.2",
     "helmet": "^7.1.0",
     "lodash": "^4.17.21",
+    "node-fetch": "^2.7.0",
     "nodemon": "^3.0.2",
     "openai": "^4.24.7",
     "socket.io": "^4.7.2",

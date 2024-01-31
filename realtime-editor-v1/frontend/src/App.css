@@ -1,4 +1,4 @@
-/* fix error: ResizeObserver loop completed with undelivered notifications */
+/* !!!IMPORTANT fix error: ResizeObserver loop completed with undelivered notifications */
 iframe#webpack-dev-server-client-overlay{
   display:none!important
 }
@@ -187,8 +187,6 @@ input:focus::placeholder {
 .editorContent {
   display: flex;
   max-width: 100%;
-  /* grid-template-columns: 50% 0.2% 50%; */
-  /* overflow: hidden; */
 }
 
 .editorSpace{
@@ -196,6 +194,7 @@ input:focus::placeholder {
   background-color: #282a36;
 }
 
+/* For editor v1 */
 /* .CodeMirror {
   min-height: 94vh;
   max-width: 120vh;
@@ -203,6 +202,7 @@ input:focus::placeholder {
   box-sizing: border-box;
 } */
 
+/* For editor v2 */
 .monaco-editor{
   min-height: 94vh;
   max-width: 120vh;
@@ -284,7 +284,6 @@ input:focus::placeholder {
 
 .tabBtn:hover{
   background-color: #2d2f38;
-  /* background-color: #282a36; */
 }
 
 .tabBtn:hover .closeTabBtn{
@@ -330,27 +329,15 @@ input:focus::placeholder {
   width: 3px;
 }
 .outputSpace{
-  border: 3px solid #282a36;
-  /* display: flex;  */
-  /* border-top: 3px solid red; */
-  height: 93.9vh;
-  max-height: 93.9vh;
-  overflow-y: auto;
-  background-color: #282a36;
-  min-width: 64.5vh;
-}
-
-.outputContainer {
-  /* display: flex; */
-  /* flex-direction: column; */
-  /* height: 90vh; */
-  max-height: 100vh;
   position: relative;
+  border: 3px solid #282a36;
+  background-color: #282a36;
+  max-height: 100%;
 }
 
 .outputTaskbar{
   display: grid;
-  grid-template-columns: 20% 60% 20%;
+  grid-template-columns: 25% 50% 25%;
   background: #1c1e29;
   border-bottom: 1px solid #424242;
   color: #eee;
@@ -368,6 +355,7 @@ input:focus::placeholder {
 
 .outputTitle {
   text-align: center;
+  user-select: none;
 }
 
 .rightIcon{
@@ -394,33 +382,14 @@ input:focus::placeholder {
 }
 
 .container-monitor{
-  /* position: relative; */
-  /* height: 50%; */
-  height: auto !important;
-  /* padding-top: 56.25%; */
+  height: 100%;
   background-color: white;
 }
 
-/* .outputContainer .container__bottom {
-  height: auto !important;
-  position: absolute;
-  bottom: 0;
-  top: 30rem;
-  width: 100%; 
-  max-height: 20vh;
-  overflow-y: auto;
-} */
-
-.outputMonitor{
-  /* max-height: 80%; */
-  width: 100%;
-  overflow-y: auto;
-  border: none;
-}
-
 .outputMonitor iframe{
-  max-height: 90vh;
-  height: 88vh;
+  border: none;
+  height: 100vh;
+  user-select: none;
 }
 
 .separator-output{
@@ -433,7 +402,7 @@ input:focus::placeholder {
 
 .rotate-90 {
   transform: rotate(90deg);
-  transition: transform 0.3s ease; /* Optional: Adds a smooth transition */
+  transition: transform 0.3s ease;
 }
 
 
@@ -445,15 +414,12 @@ input:focus::placeholder {
 }
 
 .gutter.gutter-vertical {
-  /* margin-top: 5px; */
-  /* background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAFAQMAAABo7865AAAABlBMVEVHcEzMzMzyAv2sAAAAAXRSTlMAQObYZgAAABBJREFUeF5jOAMEEAIEEFwAn3kMwcB6I2AAAAAASUVORK5CYII='); */
   background-color: #39464e;
   cursor: row-resize;
   transition: transform 0.3s ease;
 }
 
 .gutter.gutter-horizontal {
-  /* background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg=='); */
   background-color: #39464e;
   cursor: col-resize;
   transition: transform 0.3s ease;
@@ -466,17 +432,3 @@ input:focus::placeholder {
 .gutter.gutter-horizontal:hover{
   background-color: #5271ff;
 }
-
-
-
-
-/* .modal {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background: #fff;
-  padding: 20px;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000; 
-} */

@@ -3,6 +3,7 @@
 POST {{url_dev}}/chatbot
 Content-Type: application/json
 
-{
-    "question": "give me a sign up form using reactjs and tailwind?"
+{   
+    "stream": true,
+    "messages": [ { "role": "user", "content": "Create chatbox using jsx." }]
 }

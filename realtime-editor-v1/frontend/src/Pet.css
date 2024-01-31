@@ -1,10 +1,11 @@
+/* Max z-index of monaco editor is 11*/
 #draggable-circle {
     width: 60px;
     height: 60px;
     /* background-color: #3498db; */
     border-radius: 50%;
     position: absolute;
-    z-index: 5;
+    z-index: 12;
     top: 50%;
     left: 5%;
     cursor: pointer;
@@ -138,10 +139,12 @@
     transition: 0.5s;
     border: none;
     justify-items: center;
+    background-color: #004bad69;
+    animation: 3s ease infinite alternate running shimmer;
 }
 
 .menu-item button img{
-    width: 58px;
+    width: 52px;
     pointer-events: none;
 }
 

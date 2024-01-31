@@ -63,12 +63,20 @@ const Pet = () => {
     });
 
     //Hover on Pet
+    let mouseEnterTimeout;
     const menuToggle = document.getElementById("menuToggle");
     const handleMouseEnter = () => {
+      clearTimeout(mouseEnterTimeout);
       menuToggle.checked = true;
     };
-
+    const handleMouseLeave = () => {
+      mouseEnterTimeout = setTimeout(() => {
+        menuToggle.checked = false;
+      }, 3000);
+    };
+    
     draggableCircle.addEventListener("mouseenter", handleMouseEnter);
+    draggableCircle.addEventListener("mouseleave", handleMouseLeave);
 
     // Cleanup the event listeners when the component unmounts
     return () => {
@@ -81,6 +89,8 @@ const Pet = () => {
       });
 
       draggableCircle.removeEventListener("mouseenter", handleMouseEnter);
+      draggableCircle.removeEventListener("mouseleave", handleMouseLeave);
+
     };
   }, [isBoxOpen]);
 
