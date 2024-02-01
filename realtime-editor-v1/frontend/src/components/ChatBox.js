@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useContext } from "react";
 import "../Chatbox.css";
 import { TbNewSection, TbSettings } from "react-icons/tb";
 import { FiSend } from "react-icons/fi";
@@ -7,7 +7,9 @@ import { LuPanelRightClose } from "react-icons/lu";
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import { docco } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import Message from "./Message";
-import toast from 'react-hot-toast';
+import toast from "react-hot-toast";
+import { EditorPageContext } from "../contexts/editorpage_contexts";
+import '../dark_light_button.css'
 
 const examples = [
   "Create chatbox using jsx.",
@@ -16,15 +18,18 @@ const examples = [
   "Using JS to create a function for checking emails.",
 ];
 
-const ChatBox = ({ isBoxOpen, setIsBoxOpen, question }) => {
+const ChatBox = () => {
+  const { isChatBoxOpen, setIsChatBoxOpen, question } =
+    useContext(EditorPageContext);
+
   /* Max z-index of monaco editor is 11*/
-  const zIndex = isBoxOpen ? 12 : 0;
+  const zIndex = isChatBoxOpen ? 12 : 0;
   const [inputValue, setInputValue] = useState("");
   const [chats, setChats] = useState([]);
   const inputRef = useRef(null);
   const timeoutRef = useRef(null);
   const [isFetching, setIsFetching] = useState(false);
- 
+
   useEffect(() => {
     // Clear the previous timeout
     clearTimeout(timeoutRef.current);
@@ -32,16 +37,16 @@ const ChatBox = ({ isBoxOpen, setIsBoxOpen, question }) => {
     // Set a new timeout
     // Use Timeout to Box Chat slide more smoothly
     timeoutRef.current = setTimeout(() => {
-      if (isBoxOpen && inputRef.current) {
+      if (isChatBoxOpen && inputRef.current) {
         inputRef.current.focus();
         // Set value(question) for input
-        if(question){
+        if (question) {
           setInputValue(question);
           inputRef.current.focus();
         }
       }
     }, 300);
-  }, [isBoxOpen, question]);
+  }, [isChatBoxOpen, question]);
 
   const handleInputChange = (e) => {
     setInputValue(e.target.value);
@@ -51,22 +56,23 @@ const ChatBox = ({ isBoxOpen, setIsBoxOpen, question }) => {
     clearTimeout(timeoutRef.current);
 
     // No fetch request in progress, clear input and focus
-    if(!isFetching){
+    if (!isFetching) {
       setInputValue("");
       inputRef.current.focus();
     }
   };
-
 
   const handleSendMessage = async () => {
     if (inputValue.trim() && !isFetching) {
       setIsFetching(true);
       // Handle sending the message
       // setChats([...chats, { role: "user", content: inputValue.trim() }]);
-      setChats((prevChats) => [...prevChats, { role: "user", content: inputValue.trim() }]);
+      setChats((prevChats) => [
+        ...prevChats,
+        { role: "user", content: inputValue.trim() },
+      ]);
       // Reset the input value if needed
       setInputValue("");
-
 
       try {
         const response = await fetch(process.env.REACT_APP_API_CHATBOX_V1, {
@@ -78,11 +84,13 @@ const ChatBox = ({ isBoxOpen, setIsBoxOpen, question }) => {
           }),
         });
 
-        console.log('readData::', response.body ,'\n');
-        if(response.body.locked === false){
+        console.log("readData::", response.body, "\n");
+        if (response.body.locked === false) {
           const data = await response.json();
-          if(data.status === 'error'){
-            toast.error(`Error ${data.metadata.code}: ${data.metadata.message}`);
+          if (data.status === "error") {
+            toast.error(
+              `Error ${data.metadata.code}: ${data.metadata.message}`
+            );
           }
         }
 
@@ -92,7 +100,7 @@ const ChatBox = ({ isBoxOpen, setIsBoxOpen, question }) => {
         let aiRes = "";
         while (true) {
           const { done, value } = await readData.read();
-          
+
           if (done) break;
           aiRes += value;
           setChats([
@@ -105,10 +113,14 @@ const ChatBox = ({ isBoxOpen, setIsBoxOpen, question }) => {
         // console.error("Error in fetch:", error);
         setChats([
           ...chats,
-          { role: "user", content: inputValue },  // Include user message
-          { role: "assistant", content: "Sorry! Have some problems with chat bot service. Please try again!" },
+          { role: "user", content: inputValue }, // Include user message
+          {
+            role: "assistant",
+            content:
+              "Sorry! Have some problems with chat bot service. Please try again!",
+          },
         ]);
-      }finally {
+      } finally {
         setIsFetching(false);
       }
     }
@@ -123,36 +135,53 @@ const ChatBox = ({ isBoxOpen, setIsBoxOpen, question }) => {
   useEffect(() => {
     //Add Scrollbar for answers box
     let container = document.getElementById("answers-box-chats");
-    if (isBoxOpen && container) {
+    if (isChatBoxOpen && container) {
       container.scrollTop = container?.scrollHeight;
     }
-  }, [chats, isBoxOpen, inputValue]);
+  }, [chats, isChatBoxOpen, inputValue]);
 
   return (
     <div className="chatbox-container" style={{ zIndex }}>
-      <div className={`slide-box ${isBoxOpen ? "open" : ""}`}>
+      <div className={`slide-box ${isChatBoxOpen ? "open" : ""}`}>
         {/* Taskbar */}
         <div className="chatbox-taskbar">
-          <TbNewSection 
-            className={`chatBox-icon ${isFetching ? 'disabled': ''} `}
-            id="newChat-icon" 
+          <TbNewSection
+            className={`chatBox-icon ${isFetching ? "disabled" : ""} `}
+            id="newChat-icon"
             title="New chat"
             onClick={() => setChats([])}
           />
           <span className="chatBox-title">Chat GPT</span>
 
-          <div className="rightIcon monitor">
+          <div className="rightIcon chat-box">
             <TbSettings
-              className={`chatBox-icon ${isFetching ? 'disabled': ''} `}
+              className={`chatBox-icon ${isFetching ? "disabled" : ""} `}
               id="setting-icon"
               title="Ctrl + Shift + S"
             />
-            <LuPanelRightClose 
-              className={`chatBox-icon ${isFetching ? 'disabled': ''} `}
+            <LuPanelRightClose
+              className={`chatBox-icon ${isFetching ? "disabled" : ""} `}
               id="setting-icon"
               title="Ctrl + Shift + Q"
-              onClick={() => setIsBoxOpen(false)}
+              onClick={() => setIsChatBoxOpen(false)}
             />
+          </div>
+        </div>
+
+        {/* Settings box */}
+        <div className="setting-box">
+          <div className="setting-options-container">
+            <div className="setting-option">
+              <label>Your Api</label>
+              <input className="input-api"/>
+              <botton className="btn submit-api"></botton>
+            </div>
+            <div className="setting-option">
+              <div class="switch">
+                <input id="switch" class="switch__input" name="switch" type="checkbox"/>
+                <label class="switch__label" for="switch"></label>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -217,19 +246,23 @@ const ChatBox = ({ isBoxOpen, setIsBoxOpen, question }) => {
                   type="text"
                   className="question-input"
                   placeholder="Type your message here..."
-                  autoFocus={isBoxOpen}
+                  autoFocus={isChatBoxOpen}
                   value={inputValue}
                   onChange={handleInputChange}
                   onKeyPress={handleKeyPress}
                   ref={inputRef}
                 />
                 <span className="question-icon">
-                {isFetching ? (
-                  <FaRegStopCircle className="chatBox-icon" id="stopChat-icon" title="Stop" onClick={handleClickAbort} />
-                ) : (
-                  <FiSend className="icon-send" onClick={handleSendMessage} />
-                )}
-                 
+                  {isFetching ? (
+                    <FaRegStopCircle
+                      className="chatBox-icon"
+                      id="stopChat-icon"
+                      title="Stop"
+                      onClick={handleClickAbort}
+                    />
+                  ) : (
+                    <FiSend className="icon-send" onClick={handleSendMessage} />
+                  )}
                 </span>
               </div>
               <small> AI can generate incorrect information.</small>

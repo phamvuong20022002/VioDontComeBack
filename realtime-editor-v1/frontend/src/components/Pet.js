@@ -1,26 +1,19 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import "../Pet.css";
 import ChatBox from "./ChatBox";
-import { detectKeyboard } from "../helpers/DetectKeyDown";
+import { detectKeyCombination } from "../helpers/DetectKeyDown";
+import { FUCTION_KEYS } from "../assets/variables_template";
+import { EditorPageContext } from "../contexts/editorpage_contexts";
+import { getSelectedText } from "../helpers/GetSelectedText";
 
 const Pet = () => {
-  const [isBoxOpen, setIsBoxOpen] = useState(false);
-  const [question, setQuestion] = useState('');
+
+  const {isChatBoxOpen, setIsChatBoxOpen, setQuestion} = useContext(EditorPageContext);
 
   const toggleSlideBox = () => {
-    setIsBoxOpen(!isBoxOpen);
+    setIsChatBoxOpen(!isChatBoxOpen);
   };
 
-  // Function to get the selected text
-  function getSelectedText() {
-    var selectedText = "";
-    if (window.getSelection) {
-      selectedText = window.getSelection().toString();
-    } else if (document.selection && document.selection.type !== "Control") {
-      selectedText = document.selection.createRange().text;
-    }
-    return selectedText;
-  }
 
   useEffect(() => {
     //Drag Pet
@@ -106,23 +99,38 @@ const Pet = () => {
       draggableCircle.removeEventListener("mouseenter", handleMouseEnter);
       draggableCircle.removeEventListener("mouseleave", handleMouseLeave);
     };
-  }, [isBoxOpen]);
+  }, [isChatBoxOpen]);
 
   useEffect(() => {
     const callChatBot = () => {
       const question = getSelectedText();
-      setIsBoxOpen(true);
+      if(!question) { 
+        setIsChatBoxOpen(false);
+      }
+      else {
+        setIsChatBoxOpen(true);
+      }
       setQuestion(question);
     }
 
-    detectKeyboard(['Ctrl', 'Q'], callChatBot);
-    detectKeyboard(['Ctrl', 'Shift', 'Q'], toggleSlideBox);
+    const HandleKeyDown = (event) =>{
+      if (detectKeyCombination(event, [FUCTION_KEYS.CONTROL, FUCTION_KEYS.SHIFT, 'Q'])) {
+        toggleSlideBox();
+      }
+      else if (detectKeyCombination(event, [FUCTION_KEYS.CONTROL, 'Q'])){
+        callChatBot();
+      }
+    }
+    document.addEventListener("keydown", HandleKeyDown);
 
-  }, [isBoxOpen]);
+    return () => {
+      document.removeEventListener("keydown", HandleKeyDown);
+    }
+  }, [isChatBoxOpen]);
 
   return (
     <div>
-      <ChatBox isBoxOpen={isBoxOpen} setIsBoxOpen={setIsBoxOpen} question={question}/>
+      <ChatBox/>
       <div id="draggable-circle">
         <input className="menu-toggler" type="checkbox" id="menuToggle" />
         <div className="pet-container">

@@ -13,7 +13,12 @@ const Console = () => {
 
       if (event.data && event.data.type === "error") {
         setConsoleValues((prevLogs) => [
-          { type: "error", message: event.data.message, filename: event.data.filename, lineno: event.data.lineno },
+          {
+            type: "error",
+            message: event.data.message,
+            filename: event.data.filename,
+            lineno: event.data.lineno,
+          },
           ...prevLogs,
         ]);
       }
@@ -45,13 +50,17 @@ const Console = () => {
       {consoleValues.map((value, index) => (
         <div key={index}>
           <div className="consoleLine">
-            <span className={value.type}>{value.message}</span>
-            <span className={"lineInfo " + value.type}>
-              {value.type !== "error" && <>{"time: " + value.time}</>}
-              {value.type === "error" && (
-                <>{value.filename + " : " + value.lineno}</>
-              )}
-            </span>
+            <code>
+              <span className={value.type}>{value.message}</span>
+            </code>
+            <code>
+              <span className={"lineInfo " + value.type}>
+                {value.type !== "error" && <>{"time: " + value.time}</>}
+                {value.type === "error" && (
+                  <>{value.filename + " : " + value.lineno}</>
+                )}
+              </span>
+            </code>
           </div>
         </div>
       ))}

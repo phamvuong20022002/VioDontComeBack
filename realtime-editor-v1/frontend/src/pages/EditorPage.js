@@ -43,6 +43,7 @@ import { PiBroomFill } from "react-icons/pi";
 import { LuPanelBottomClose } from "react-icons/lu";
 import Pet from "../components/Pet.js";
 import { useMonaco } from "@monaco-editor/react";
+import { EditorPageProvider } from "../contexts/editorpage_contexts/index.js";
 
 const EditorPage = () => {
   const socketRef = useRef(null);
@@ -410,8 +411,6 @@ const EditorPage = () => {
           contents: fileContents,
         };
 
-        console.log("file Details::", fileDetails);
-
         //Create New tab
         let tab = {
           roomId,
@@ -675,6 +674,7 @@ const EditorPage = () => {
   }, [monaco]);
 
   return (
+    <EditorPageProvider>
     <div>
       {showModal && (
         <Modal
@@ -704,11 +704,11 @@ const EditorPage = () => {
                 <div className="clientsList">
                   {clients.map((client, index) => (
                     <Client
-                      key={index}
-                      username={client.username}
-                      clientID={client.socketID}
+                    key={index}
+                    username={client.username}
+                    clientID={client.socketID}
                     />
-                  ))}
+                    ))}
                 </div>
               </div>
               <button className="btn shareBtn" onClick={coppyRoomId}>
@@ -724,7 +724,7 @@ const EditorPage = () => {
               <div className="editorSidebar">
                 {tabs.map((tab) => (
                   <Tab key={tab.tabID} tab={tab} />
-                ))}
+                  ))}
                 <div className="tagCreate">
                   <button className="btn createTabBtn">
                     <AiOutlinePlus id="createTab-icon" title="Create new tab" />
@@ -735,7 +735,7 @@ const EditorPage = () => {
                   type="file"
                   style={{ display: "none" }}
                   onChange={handleFileChange}
-                />
+                  />
               </div>
 
               {/* Content */}
@@ -744,7 +744,7 @@ const EditorPage = () => {
                 sizes={[60, 40]}
                 // minSize={250}
                 gutterSize={3}
-              >
+                >
                 <Split
                   direction="vertical"
                   sizes={[100, 0]}
@@ -753,7 +753,7 @@ const EditorPage = () => {
                   gutterSize={3}
                   cursor="row-resize"
                   id="left-panel"
-                >
+                  >
                   {/* Editor */}
                   <div className="editorSpace" id="editor-space"></div>
 
@@ -762,7 +762,7 @@ const EditorPage = () => {
                     className="console-container"
                     id="console-container"
                     ref={consoleContainerRef}
-                  >
+                    >
                     <div className="consoleTaskbar">
                       <span className="consoleTitle">Console</span>
                       <div className="rightIcon" onClick={handleRightIcon}>
@@ -770,12 +770,12 @@ const EditorPage = () => {
                           className="outputIcon"
                           title="Clean terminal"
                           id="clean-teminal"
-                        />
+                          />
                         <LuPanelBottomClose
                           className="outputIcon"
                           title="Clean terminal"
                           id="close-teminal"
-                        />
+                          />
                       </div>
                     </div>
                     <Console />
@@ -786,7 +786,7 @@ const EditorPage = () => {
                 <div className="outputSpace" id="right-panel">
                   {socketRef.current !== null && (
                     <Output socketRef={socketRef} roomId={roomId} />
-                  )}
+                    )}
                 </div>
               </Split>
             </div>
@@ -794,6 +794,7 @@ const EditorPage = () => {
         </div>
       )}
     </div>
+  </EditorPageProvider>
   );
 };
 

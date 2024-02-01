@@ -1,0 +1,63 @@
+.switch {
+    position: relative;
+}
+
+.switch__input {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    z-index: 1;
+}
+
+.switch__label {
+    display: block;
+    position: relative;
+    width: 100px;
+    height: 50px;
+    background-color: #333;
+    border-radius: 25px;
+    transition: 0.4s;
+    border: 1px solid #333;
+}
+
+.switch__label::before {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 0;
+    right: auto;
+    left: 0;
+    bottom: 0;
+    width: 50px;
+    height: 50px;
+    border-radius: 100%;
+    border: 2px #333 solid;
+    background-color: #fff;
+    color: #333;
+    transition: 0.4s;
+    content: "\f185";
+    font-family: "Font Awesome 6 Free";
+    font-size: 30px;
+    font-weight: 900;
+    box-sizing: border-box;
+}
+
+
+.switch__input:checked+.switch__label {
+    background-color: #fff;
+}
+
+.switch__input:checked+.switch__label::before {
+    left: calc(100% - 50px);
+    border-color: #333;
+    background-color: #333;
+    content: "\f186";
+    color: #fff;
+}

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import Editor from "@monaco-editor/react";
 import ACTIONS from "../Actions";
 
@@ -47,7 +47,7 @@ const MonacoEditor = ({ socketRef, roomId, tab, onCodeChange, themeData}) => {
       language={
         tab.type === "javascript" || tab.type === "babel"
           ? "javascript"
-          : tab.type
+          : tab.type === "xml" ? 'html' : tab.type
       }
       // theme="vs-dark" // Change theme as needed
       theme={themeData}
