@@ -16,7 +16,7 @@ const examples = [
   "Using JS to create a function for checking emails.",
 ];
 
-const ChatBox = ({ isBoxOpen, setIsBoxOpen }) => {
+const ChatBox = ({ isBoxOpen, setIsBoxOpen, question }) => {
   /* Max z-index of monaco editor is 11*/
   const zIndex = isBoxOpen ? 12 : 0;
   const [inputValue, setInputValue] = useState("");
@@ -34,9 +34,14 @@ const ChatBox = ({ isBoxOpen, setIsBoxOpen }) => {
     timeoutRef.current = setTimeout(() => {
       if (isBoxOpen && inputRef.current) {
         inputRef.current.focus();
+        // Set value(question) for input
+        if(question){
+          setInputValue(question);
+          inputRef.current.focus();
+        }
       }
     }, 300);
-  }, [isBoxOpen]);
+  }, [isBoxOpen, question]);
 
   const handleInputChange = (e) => {
     setInputValue(e.target.value);
@@ -121,7 +126,7 @@ const ChatBox = ({ isBoxOpen, setIsBoxOpen }) => {
     if (isBoxOpen && container) {
       container.scrollTop = container?.scrollHeight;
     }
-  }, [chats, isBoxOpen]);
+  }, [chats, isBoxOpen, inputValue]);
 
   return (
     <div className="chatbox-container" style={{ zIndex }}>
@@ -140,12 +145,12 @@ const ChatBox = ({ isBoxOpen, setIsBoxOpen }) => {
             <TbSettings
               className={`chatBox-icon ${isFetching ? 'disabled': ''} `}
               id="setting-icon"
-              title="Settings"
+              title="Ctrl + Shift + S"
             />
             <LuPanelRightClose 
               className={`chatBox-icon ${isFetching ? 'disabled': ''} `}
               id="setting-icon"
-              title="Settings"
+              title="Ctrl + Shift + Q"
               onClick={() => setIsBoxOpen(false)}
             />
           </div>

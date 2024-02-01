@@ -1,17 +1,32 @@
 import React, { useEffect, useState } from "react";
 import "../Pet.css";
 import ChatBox from "./ChatBox";
+import { detectKeyboard } from "../helpers/DetectKeyDown";
 
 const Pet = () => {
   const [isBoxOpen, setIsBoxOpen] = useState(false);
+  const [question, setQuestion] = useState('');
 
   const toggleSlideBox = () => {
     setIsBoxOpen(!isBoxOpen);
   };
 
+  // Function to get the selected text
+  function getSelectedText() {
+    var selectedText = "";
+    if (window.getSelection) {
+      selectedText = window.getSelection().toString();
+    } else if (document.selection && document.selection.type !== "Control") {
+      selectedText = document.selection.createRange().text;
+    }
+    return selectedText;
+  }
+
   useEffect(() => {
     //Drag Pet
     const draggableCircle = document.getElementById("draggable-circle");
+
+    //Set up draggable for pet
     let isDragging = false;
     let offsetX, offsetY;
 
@@ -46,14 +61,14 @@ const Pet = () => {
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseup", handleMouseUp);
 
-    //Click Pet Buttons
+    //Handle Click Pet Buttons
     const handleButtonClick = (e) => {
       e.preventDefault();
       if (e.target.closest("button").id === "chatbox") {
         toggleSlideBox();
       }
       if (e.target.closest("button").id === "templates") {
-        console.log('templates')
+        console.log("templates");
       }
     };
 
@@ -74,7 +89,7 @@ const Pet = () => {
         menuToggle.checked = false;
       }, 3000);
     };
-    
+
     draggableCircle.addEventListener("mouseenter", handleMouseEnter);
     draggableCircle.addEventListener("mouseleave", handleMouseLeave);
 
@@ -90,13 +105,24 @@ const Pet = () => {
 
       draggableCircle.removeEventListener("mouseenter", handleMouseEnter);
       draggableCircle.removeEventListener("mouseleave", handleMouseLeave);
-
     };
+  }, [isBoxOpen]);
+
+  useEffect(() => {
+    const callChatBot = () => {
+      const question = getSelectedText();
+      setIsBoxOpen(true);
+      setQuestion(question);
+    }
+
+    detectKeyboard(['Ctrl', 'Q'], callChatBot);
+    detectKeyboard(['Ctrl', 'Shift', 'Q'], toggleSlideBox);
+
   }, [isBoxOpen]);
 
   return (
     <div>
-      <ChatBox isBoxOpen={isBoxOpen} setIsBoxOpen={setIsBoxOpen}/>
+      <ChatBox isBoxOpen={isBoxOpen} setIsBoxOpen={setIsBoxOpen} question={question}/>
       <div id="draggable-circle">
         <input className="menu-toggler" type="checkbox" id="menuToggle" />
         <div className="pet-container">
