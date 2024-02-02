@@ -2,14 +2,22 @@ import React, { useState, useRef, useEffect, useContext } from "react";
 import "../Chatbox.css";
 import { TbNewSection, TbSettings } from "react-icons/tb";
 import { FiSend } from "react-icons/fi";
-import { FaUser, FaRegStopCircle } from "react-icons/fa";
+import { FaUser, FaRegStopCircle, FaKey } from "react-icons/fa";
+import { PiWarningCircle } from "react-icons/pi";
+import { CiSaveUp2 } from "react-icons/ci";
 import { LuPanelRightClose } from "react-icons/lu";
+import { MdOutlineChangeCircle } from "react-icons/md";
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import { docco } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import Message from "./Message";
 import toast from "react-hot-toast";
 import { EditorPageContext } from "../contexts/editorpage_contexts";
-import '../dark_light_button.css'
+import "../dark_light_button.css";
+import { LINKS } from "../assets/links/index";
+import "@fortawesome/fontawesome-free/css/all.min.css";
+import { checkOpenAPIKey } from "../helpers/CheckAPIKey";
+import { maskApiKey } from "../helpers/MaskAPIKey";
+
 
 const examples = [
   "Create chatbox using jsx.",
@@ -29,6 +37,12 @@ const ChatBox = () => {
   const inputRef = useRef(null);
   const timeoutRef = useRef(null);
   const [isFetching, setIsFetching] = useState(false);
+  const [isDisplaySettings, setIsDisplaySettings] = useState(false);
+  const [isDarkModeChatBox, setIsDarkModeChatBox] = useState(true);
+  const [isEnterKey, setIsEnterKey] = useState(false);
+  const [inputAPIValue, setInputAPIValue] = useState("");
+  const [errorMessage, setErrorMessage] = useState({});
+  const [validAPI, setValidAPI] = useState("");
 
   useEffect(() => {
     // Clear the previous timeout
@@ -132,6 +146,39 @@ const ChatBox = () => {
     }
   };
 
+  const handleKeyAPIPress = (e) => {
+    if (e.key === "Enter") {
+      handleSendAPI();
+    }
+  };
+
+  const handleApiChange = (e) => {
+    setIsEnterKey(!!e.target.value);
+    setInputAPIValue(e.target.value);
+    setErrorMessage({});
+  };
+
+  const submitOpenaiApi = () => {
+    handleSendAPI();
+  };
+
+  const handleSendAPI = async () => {
+    //API Processing
+    //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
+    let apiKey = inputAPIValue.trim();
+    const response = await checkOpenAPIKey(apiKey);
+    if (response.status) {
+      setValidAPI(inputAPIValue.trim());
+      console.log("OpenAI API key is valid!");
+    } else {
+      setErrorMessage({
+        message: response.message,
+        details: response.errors_details,
+      });
+    }
+    setInputAPIValue("");
+  };
+
   useEffect(() => {
     //Add Scrollbar for answers box
     let container = document.getElementById("answers-box-chats");
@@ -142,7 +189,11 @@ const ChatBox = () => {
 
   return (
     <div className="chatbox-container" style={{ zIndex }}>
-      <div className={`slide-box ${isChatBoxOpen ? "open" : ""}`}>
+      <div
+        className={`slide-box ${isChatBoxOpen ? "open" : ""}  ${
+          isDarkModeChatBox ? "" : "light-mode"
+        }`}
+      >
         {/* Taskbar */}
         <div className="chatbox-taskbar">
           <TbNewSection
@@ -155,13 +206,16 @@ const ChatBox = () => {
 
           <div className="rightIcon chat-box">
             <TbSettings
-              className={`chatBox-icon ${isFetching ? "disabled" : ""} `}
-              id="setting-icon"
+              className={`chatBox-icon ${isFetching ? "disabled" : ""} ${
+                isDisplaySettings ? "rotate-90" : ""
+              }`}
+              id="settings-icon"
               title="Ctrl + Shift + S"
+              onClick={() => setIsDisplaySettings(!isDisplaySettings)}
             />
             <LuPanelRightClose
               className={`chatBox-icon ${isFetching ? "disabled" : ""} `}
-              id="setting-icon"
+              id="close-icon"
               title="Ctrl + Shift + Q"
               onClick={() => setIsChatBoxOpen(false)}
             />
@@ -169,17 +223,83 @@ const ChatBox = () => {
         </div>
 
         {/* Settings box */}
-        <div className="setting-box">
+        <div className={`setting-box ${isDisplaySettings ? "show" : "hide"}`}>
+          <div className="setting-title">
+            <span>Chat Box Settings</span>
+          </div>
+          <div className="setting-options-container">
+            <div className="setting-option-custom">
+              <div className="custom-top">
+                <div className="top-title">
+                  <span>Use Your OpenAI API</span>
+                  <PiWarningCircle
+                    className="title-icon"
+                    title="What will we do with your API?"
+                  />
+                </div>
+              </div>
+              <div className="custom-bottom">
+                {validAPI ? (
+                  <div className="api-box">
+                    <div className="api-title">Available API</div>
+                    <pre className="api-key">
+                      {maskApiKey(validAPI)}
+                    </pre>
+                    <MdOutlineChangeCircle id="icon-change-api" title="Change API" onClick={()=>setValidAPI("")}/>
+                  </div>
+                ) : (
+                  <div className="input-box">
+                    <div className="input-wrap">
+                      <input
+                        name="api_key"
+                        value={inputAPIValue}
+                        className="input-api"
+                        placeholder="Enter your API key..."
+                        onChange={handleApiChange}
+                        onKeyPress={handleKeyAPIPress}
+                      />
+                      {isEnterKey ? (
+                        <CiSaveUp2
+                          className="api-icon"
+                          id="submit-api-icon"
+                          onClick={submitOpenaiApi}
+                        />
+                      ) : (
+                        <FaKey className="api-icon" id="icon-key" />
+                      )}
+                      <small className="error-input">
+                        {errorMessage.message}{" "}
+                        <a href={errorMessage.details} target="_blank">
+                          {errorMessage.details ? "More Info!" : ""}
+                        </a>
+                      </small>
+                    </div>
+                    <small className="link-api">
+                      How to get an OpenAI API Key.{" "}
+                      <a href={LINKS.HOW_TO_GET_OPENAI_API_KEY} target="_blank">
+                        Click here!
+                      </a>
+                    </small>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
           <div className="setting-options-container">
             <div className="setting-option">
-              <label>Your Api</label>
-              <input className="input-api"/>
-              <botton className="btn submit-api"></botton>
-            </div>
-            <div className="setting-option">
-              <div class="switch">
-                <input id="switch" class="switch__input" name="switch" type="checkbox"/>
-                <label class="switch__label" for="switch"></label>
+              <label>Chat Box Themes</label>
+              <div className="switch">
+                <input
+                  id="switch"
+                  className="switch__input"
+                  name="switch"
+                  type="checkbox"
+                  checked={isDarkModeChatBox}
+                  onChange={() => {
+                    setIsDarkModeChatBox(!isDarkModeChatBox);
+                  }}
+                />
+                <label className="switch__label"></label>
               </div>
             </div>
           </div>

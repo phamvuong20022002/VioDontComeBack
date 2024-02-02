@@ -29,4 +29,4 @@ const Tab = (tabContent) => {
     );
 };
 
-export default memo(Tab);
+export default Tab;

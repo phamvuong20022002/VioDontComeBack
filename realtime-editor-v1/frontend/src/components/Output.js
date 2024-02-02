@@ -224,4 +224,4 @@ const Output = ({socketRef, roomId}) => {
   );
 };
 
-export default memo(Output);
+export default Output;

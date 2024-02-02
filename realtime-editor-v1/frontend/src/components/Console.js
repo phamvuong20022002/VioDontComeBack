@@ -68,4 +68,4 @@ const Console = () => {
   );
 };
 
-export default memo(Console);
+export default Console;

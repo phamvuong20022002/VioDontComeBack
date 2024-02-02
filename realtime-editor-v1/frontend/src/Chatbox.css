@@ -68,13 +68,18 @@
     padding-left: 2px;
 }
 
-.answers-box-chats{
+.chat-box #settings-icon{
+    padding-left: 0 !important;
+    transition: transform 0.5s ease-in-out;
+}
+
+.answers-box-chats {
     height: 80%;
     overflow-x: scroll;
     /* padding: 2rem; */
 }
 
-.answers-box-chats .answer-wrap{
+.answers-box-chats .answer-wrap {
     width: 98.5%;
     /* border: 1px solid white; */
     padding-left: 0.5rem;
@@ -83,7 +88,7 @@
     display: flex;
 }
 
-.answers-box-chats .role{
+.answers-box-chats .role {
     display: flex;
     border-radius: 50%;
     padding: 0.5rem;
@@ -93,7 +98,7 @@
     height: 100%;
 }
 
-.answers-box-chats .answer{
+.answers-box-chats .answer {
     line-height: 2;
     padding-right: 1rem;
     padding-left: 1.5rem;
@@ -101,7 +106,7 @@
     overflow-x: auto;
 }
 
-.answers-box-chats .answer pre{
+.answers-box-chats .answer pre {
     margin: 0;
 }
 
@@ -111,7 +116,7 @@
     justify-items: center;
 }
 
-.answers-box-chats .assistant{
+.answers-box-chats .assistant {
     background-color: rgb(30 41 59);
 }
 
@@ -211,6 +216,224 @@
     color: rgb(100 116 139);
 }
 
-.disabled{
+.disabled {
     pointer-events: none;
+}
+
+/* Light mode */
+.light-mode .chatbox-bot{
+    background-color: #eee !important;
+    color: rgb(30 41 59) !important;
+}
+.light-mode .chatbox-bot input{
+    background-color: #eee !important;
+    color: rgb(30 41 59) !important;
+}
+
+.light-mode .chatbox-bot .example{
+    border: 1px solid rgb(30 41 59) !important;
+    color: #1c1e29 !important;
+}
+
+.light-mode .chatbox-bot .example:hover{
+    background-color: #c2c2c2 !important;
+    color: rgb(30 41 59) !important;
+}
+
+.light-mode .chatbox-bot .answer-wrap{
+    background-color: #eee !important;
+}
+
+.light-mode .chatbox-bot .assistant {
+    background-color: #c2c2c2 !important;
+}
+
+/* setting-box */
+.setting-box {
+    position: absolute;
+    width: 55vh;
+    max-height: 35vh;
+    background-color: #3c3f4e;
+    right: 0;
+    transition: opacity 0.3s ease-in-out, max-height 0.2s ease-in-out;
+}
+
+.setting-box.show {
+    display: block;
+    opacity: 1;
+    max-height: 35vh;
+    /* You can adjust the max-height or other properties for the desired effect */
+}
+
+.setting-box.hide {
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+}
+
+.setting-title {
+    text-align: center;
+}
+
+.setting-options-container {
+    position: relative;
+    border-top: 1px solid white;
+    display: flex;
+    flex-direction: column;
+    margin-top: .5rem;
+}
+
+.setting-option {
+    display: flex;
+    height: 10vh;
+    gap: 2rem;
+    justify-content: space-between;
+    align-items: center;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.setting-option label {
+    font-size: medium;
+    font-weight: 500;
+}
+
+.setting-option-custom {
+    display: flex;
+    flex-direction: column;
+    padding-left: 1rem;
+}
+
+.setting-option-custom .custom-top {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    /* border: 1px solid white; */
+    /* padding: 0.5rem 1.5rem; */
+    padding-bottom: 0.5rem;
+    padding-top: 0.5rem;
+    width: 50%;
+}
+
+.custom-top .top-title {
+    display: flex;
+    font-size: medium;
+    font-weight: 500;
+    gap: .5rem;
+}
+
+.custom-top .top-title .title-icon {
+    font-size: large;
+    color: #b08d00;
+    align-items: center;
+    padding-top: 0.2rem;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+}
+
+.custom-top .top-title .title-icon:hover {
+    color: #ffcc00;
+    cursor: pointer;
+}
+
+.setting-option-custom .custom-bottom {
+    display: flex;
+    justify-content: center;
+    transition: display 0.3s ease-out;
+}
+
+.custom-bottom .api-box{
+    display: flex;
+    width: 100%;
+    gap: 0.8rem;
+    align-items: center;
+}
+
+.api-box .api-title{
+    font-size: 15px;
+    font-weight: 500;
+    padding-bottom: 10px;
+}
+
+.api-box .api-key{
+    max-width: 60%;
+    overflow-y: auto;
+}
+
+.api-box #icon-change-api{
+    font-size: 20px;
+    padding-bottom: 10px;
+    cursor: pointer;
+}
+
+.api-box #icon-change-api:hover{
+    color: #999999;
+    padding-bottom: 10px;
+}
+
+.custom-bottom .input-box {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+
+}
+
+.custom-bottom .input-wrap {
+    align-items: center;
+}
+
+.custom-bottom .input-api {
+    width: 85%;
+    height: 35px;
+    border-radius: 2px;
+    padding-right: 2rem;
+    padding-left: 0.5rem;
+    border: none;
+    outline: none;
+}
+
+.input-wrap .api-icon {
+    font-size: 16px;
+    align-items: center;
+    position: absolute;
+    top: 3rem;
+    right: 1.5rem;
+    color: #1c1e29;
+}
+
+.input-wrap #submit-api-icon{
+    cursor: pointer;
+}
+
+.input-box .link-api {
+    position: relative;
+    float: right;
+    text-align: center;
+    margin-top: 0.3rem;
+}
+
+.input-box .link-api a {
+    color: #2950ff;
+    cursor: pointer;
+}
+
+.input-box .link-api a:hover {
+    color: #5271ff;
+    cursor: pointer;
+}
+
+.input-box .error-input{
+    font-size: small;
+    color: #ff3333;
+}
+
+.input-box .error-input a{
+    /* text-decoration: none; */
+    color: #c2c2c2;
+}
+
+
+
+.rotate-180 {
+    transform: rotate(180deg);
 }

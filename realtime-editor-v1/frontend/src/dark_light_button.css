@@ -18,9 +18,9 @@
 .switch__label {
     display: block;
     position: relative;
-    width: 100px;
-    height: 50px;
-    background-color: #333;
+    width: 80px;
+    height: 40px;
+    background-color: #fff;
     border-radius: 25px;
     transition: 0.4s;
     border: 1px solid #333;
@@ -35,8 +35,8 @@
     right: auto;
     left: 0;
     bottom: 0;
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
     border-radius: 100%;
     border: 2px #333 solid;
     background-color: #fff;
@@ -44,19 +44,19 @@
     transition: 0.4s;
     content: "\f185";
     font-family: "Font Awesome 6 Free";
-    font-size: 30px;
+    font-size: 20px;
     font-weight: 900;
     box-sizing: border-box;
 }
 
 
 .switch__input:checked+.switch__label {
-    background-color: #fff;
+    background-color: #333;
 }
 
 .switch__input:checked+.switch__label::before {
-    left: calc(100% - 50px);
-    border-color: #333;
+    left: calc(100% - 40px);
+    border-color: #fff;
     background-color: #333;
     content: "\f186";
     color: #fff;

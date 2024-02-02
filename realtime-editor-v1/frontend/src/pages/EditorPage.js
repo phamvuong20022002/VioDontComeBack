@@ -798,4 +798,4 @@ const EditorPage = () => {
   );
 };
 
-export default memo(EditorPage);
+export default EditorPage;
