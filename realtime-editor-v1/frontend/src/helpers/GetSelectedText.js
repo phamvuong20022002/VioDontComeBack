@@ -1,10 +1,12 @@
 // Function to get the selected text
-export const getSelectedText = () => {
+export const getSelectedText = (editorRef) => {
   var selectedText = "";
-  if (window.getSelection) {
-    selectedText = window.getSelection().toString();
-  } else if (document.selection && document.selection.type !== "Control") {
-    selectedText = document.selection.createRange().text;
+  if (editorRef?.current) {
+    const selection = editorRef?.current.getSelection();
+    selectedText = editorRef?.current.getModel().getValueInRange(selection);
+  }
+  else {
+    selectedText = window.getSelection()?.toString();
   }
   return selectedText;
 };

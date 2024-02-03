@@ -6,7 +6,7 @@ import { FUCTION_KEYS } from "../assets/variables_template";
 import { EditorPageContext } from "../contexts/editorpage_contexts";
 import { getSelectedText } from "../helpers/GetSelectedText";
 
-const Pet = () => {
+const Pet = ({editorRef}) => {
 
   const {isChatBoxOpen, setIsChatBoxOpen, setQuestion} = useContext(EditorPageContext);
 
@@ -103,7 +103,7 @@ const Pet = () => {
 
   useEffect(() => {
     const callChatBot = () => {
-      const question = getSelectedText();
+      const question = '```\n' + getSelectedText(editorRef); // add prefix ``` to the question
       if(!question) { 
         setIsChatBoxOpen(false);
       }

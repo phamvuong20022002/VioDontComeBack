@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, memo } from "react";
+import React, { useState, useEffect, useRef, useContext, memo } from "react";
 import {
   useLocation,
   useNavigate,
@@ -43,7 +43,7 @@ import { PiBroomFill } from "react-icons/pi";
 import { LuPanelBottomClose } from "react-icons/lu";
 import Pet from "../components/Pet.js";
 import { useMonaco } from "@monaco-editor/react";
-import { EditorPageProvider } from "../contexts/editorpage_contexts/index.js";
+import { EditorPageProvider, EditorPageContext } from "../contexts/editorpage_contexts/index.js";
 
 const EditorPage = () => {
   const socketRef = useRef(null);
@@ -53,16 +53,17 @@ const EditorPage = () => {
   const { roomId } = useParams();
   const [clients, setClients] = useState([]);
   const [tabs, setTabs] = useState([]);
-  const [tab, setTab] = useState("null");
+  const [tab, setTab] = useState("");
   const [loading, setLoading] = useState(true);
   const [fileContents, setFileContents] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [selectedOption, setSelectedOption] = useState(null);
   const [newlyChangedTab, setNewlyChangedTab] = useState(null);
   const consoleContainerRef = useRef(null);
-  const [reloadConsole, setReloadConsole] = useState(false);
   const [themeData, setThemeData] = useState("vs-dark");
   const monaco = useMonaco();
+  const editorRef = useRef(null);
+  // const {editorRef} = useContext(EditorPageContext);
 
   // var editorSpace = null;
   const editorSpace = useRef(null);
@@ -191,6 +192,7 @@ const EditorPage = () => {
           codeRef.current = code;
         }}
         themeData={themeData}
+        editorRef={editorRef}
       />
     );
   }
@@ -672,25 +674,31 @@ const EditorPage = () => {
     };
     fetchTheme();
   }, [monaco]);
-
+  
   return (
     <EditorPageProvider>
     <div>
+      {/* Modal for choosing code template */}
       {showModal && (
         <Modal
           onOptionClick={handleOptionClick}
           onClose={() => {
+            //return home page if close button is clicked
             reactNavigator("/");
           }}
         />
       )}
 
       {!showModal && loading ? (
+        //wait for data loading to complete
         <LoadingSpinner />
       ) : (
         <div>
-          <Pet />
+          {/* call my pet */}
+          <Pet editorRef={editorRef}/>
+          {/* Editor Page Main  */}
           <div className="mainWrap">
+            {/* Conected Users */}
             <div className="aside">
               <div className="asideInner">
                 <div className="logo">
@@ -719,8 +727,9 @@ const EditorPage = () => {
               </button>
             </div>
 
+            {/* WorkSpace include: Tab, Editor, Console, Ouput Component*/}
             <div className="editorWrap">
-              {/* Side Bar */}
+              {/* Side Bar - Tab Component */}
               <div className="editorSidebar">
                 {tabs.map((tab) => (
                   <Tab key={tab.tabID} tab={tab} />
@@ -738,7 +747,7 @@ const EditorPage = () => {
                   />
               </div>
 
-              {/* Content */}
+              {/* Content -  Split-horizontal(Split-vertical(Editor, Console), Ouput)*/}
               <Split
                 className="editorContent"
                 sizes={[60, 40]}
@@ -755,8 +764,9 @@ const EditorPage = () => {
                   id="left-panel"
                   >
                   {/* Editor */}
-                  <div className="editorSpace" id="editor-space"></div>
-
+                  <div className="editorSpace" id="editor-space">
+                  </div>
+                  
                   {/* Console */}
                   <div
                     className="console-container"
@@ -790,6 +800,7 @@ const EditorPage = () => {
                 </div>
               </Split>
             </div>
+
           </div>
         </div>
       )}

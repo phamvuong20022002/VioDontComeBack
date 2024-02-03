@@ -27,8 +27,7 @@ const examples = [
 ];
 
 const ChatBox = () => {
-  const { isChatBoxOpen, setIsChatBoxOpen, question } =
-    useContext(EditorPageContext);
+  const { isChatBoxOpen, setIsChatBoxOpen, question, setQuestion} = useContext(EditorPageContext);
 
   /* Max z-index of monaco editor is 11*/
   const zIndex = isChatBoxOpen ? 12 : 0;
@@ -42,7 +41,7 @@ const ChatBox = () => {
   const [isEnterKey, setIsEnterKey] = useState(false);
   const [inputAPIValue, setInputAPIValue] = useState("");
   const [errorMessage, setErrorMessage] = useState({});
-  const [validAPI, setValidAPI] = useState("");
+  const [validAPI, setValidAPI] = useState("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");
 
   useEffect(() => {
     // Clear the previous timeout
@@ -87,6 +86,7 @@ const ChatBox = () => {
       ]);
       // Reset the input value if needed
       setInputValue("");
+      setQuestion("");
 
       try {
         const response = await fetch(process.env.REACT_APP_API_CHATBOX_V1, {
@@ -141,7 +141,8 @@ const ChatBox = () => {
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
       handleSendMessage();
     }
   };
@@ -294,7 +295,7 @@ const ChatBox = () => {
                   className="switch__input"
                   name="switch"
                   type="checkbox"
-                  checked={isDarkModeChatBox}
+                  checked={isDarkModeChatBox} //default true
                   onChange={() => {
                     setIsDarkModeChatBox(!isDarkModeChatBox);
                   }}
@@ -327,9 +328,7 @@ const ChatBox = () => {
                     </span>
                   )}
                   <div className="answer">
-                    <p>
-                      <Message content={item.content} />
-                    </p>
+                    <Message content={item.content} />
                   </div>
                 </div>
               ))}
@@ -362,7 +361,7 @@ const ChatBox = () => {
           <div className="questions-box">
             <div className="question-wrap">
               <div className="question">
-                <input
+                {/* <input
                   type="text"
                   className="question-input"
                   placeholder="Type your message here..."
@@ -371,7 +370,20 @@ const ChatBox = () => {
                   onChange={handleInputChange}
                   onKeyPress={handleKeyPress}
                   ref={inputRef}
-                />
+                /> */}
+                <textarea
+                  rows="100"
+                  cols="100"
+                  style={{ resize: 'none' }}
+                  className="question-input"
+                  placeholder="Type your message here..."
+                  onChange={handleInputChange}
+                  autoFocus={isChatBoxOpen}
+                  onKeyPress={handleKeyPress}
+                  value={inputValue}
+                  ref={inputRef}
+                  >
+                </textarea>
                 <span className="question-icon">
                   {isFetching ? (
                     <FaRegStopCircle

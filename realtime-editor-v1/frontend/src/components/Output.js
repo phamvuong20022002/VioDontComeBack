@@ -11,7 +11,7 @@ import {
 } from "react-icons/vsc";
 import SelectInput from "../assets/select_input/SelectInput";
 import ACTIONS from "../Actions";
-import { initTabIDsTemplate, TIMEOUT } from "../assets/variables_template/index.js"
+import { initTabIDsTemplate, TIMEOUT_REFRESH_MONITOR } from "../assets/variables_template/index.js"
 import _ from 'lodash';
 import { getCodeWithSocket,  generateCode} from "../helpers/CodeSelectedTabs.js";
 import LoadingSpinner from "./LoadingSpinner.js";
@@ -63,7 +63,7 @@ const Output = ({socketRef, roomId}) => {
     //refresh code every 1 second
     setTimeout(() => {
       setRefresh(!refresh);
-    }, TIMEOUT);
+    }, TIMEOUT_REFRESH_MONITOR);
     //check length of selectedTabs
     if(selectedTabs.length === 0){
       setPreviewFrame(initHTMLContent);

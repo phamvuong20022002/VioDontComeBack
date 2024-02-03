@@ -54,6 +54,5 @@ export const generateCode = (data, disableConsole = true, addScriptConsole = tru
               ${jsValue}
           </html>
         `;
-    //${scriptDisableConsoleTemplate}
     return htmlContent;
 }

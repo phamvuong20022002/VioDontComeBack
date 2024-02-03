@@ -1,9 +1,11 @@
-import React, { useEffect, useRef } from "react";
+import React, { useContext, useEffect, useRef } from "react";
 import Editor from "@monaco-editor/react";
 import ACTIONS from "../Actions";
+import { EditorPageContext } from "../contexts/editorpage_contexts";
 
-const MonacoEditor = ({ socketRef, roomId, tab, onCodeChange, themeData}) => {
-  const editorRef = useRef(null);
+const MonacoEditor = ({ socketRef, roomId, tab, onCodeChange, themeData, editorRef}) => {
+  // const editorRef = useRef(null);
+  // const {editorRef} = useContext(EditorPageContext);
   const localChangeRef = useRef(false);
 
   const handleEditorChange = (value, event) => {
@@ -21,7 +23,7 @@ const MonacoEditor = ({ socketRef, roomId, tab, onCodeChange, themeData}) => {
   const handleSocketCodeChange = ({ tabId, code, origin }) => {
     if (code && tab.tabID === tabId) {
       localChangeRef.current = true;
-      editorRef.current?.setValue(code);
+      editorRef?.current?.setValue(code);
       localChangeRef.current = false;
     }
   };

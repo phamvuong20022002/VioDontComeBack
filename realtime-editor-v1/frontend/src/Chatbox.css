@@ -55,6 +55,7 @@
 
 .chatBox-title {
     text-align: center;
+    user-select: none;
 }
 
 #newChat-icon {
@@ -198,6 +199,7 @@
     color: white;
     font-size: 16px;
     width: 100%;
+    height: 3vh;
     border-radius: 0.5rem;
     padding: 1rem;
     padding-right: 3rem;

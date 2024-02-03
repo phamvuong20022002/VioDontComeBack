@@ -129,6 +129,10 @@ export const scriptDisableConsoleTemplate = `
 
   // Call the function to disable console logging
   disableConsole();
+  // Handle uncaught errors and prevent them from propagating to the parent window's console
+  window.onerror = function(message, source, lineno, colno, error) {
+    return true; // Returning true prevents the default browser behavior (logging the error to the console)
+  };
 </script>
 `
 
@@ -160,7 +164,7 @@ export const initTabsTemplate = [
     {tabID: '30', title: 'index.js'},
   ];
 
-export const TIMEOUT = 1000
+export const TIMEOUT_REFRESH_MONITOR = 1000
 
 export const MAX_FILE_SIZE_MB = 2
 
