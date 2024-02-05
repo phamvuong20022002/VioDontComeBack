@@ -1,8 +1,9 @@
 import './App.css';
-import {BrowserRouter, Routes, Route} from 'react-router-dom';
+import {BrowserRouter, Routes, Route, Redirect} from 'react-router-dom';
 import Home from './pages/Home';
 import EditorPage from './pages/EditorPage';
 import PreviewPage from './pages/PreviewPage';
+import NotFoundPage from './pages/NotFoundPage';
 import { SharedStateProvider } from './helpers/SharedStateContext';
 import {Toaster} from 'react-hot-toast'
 
@@ -27,6 +28,7 @@ function App() {
             <Route path="/" element={<Home/>}></Route>
             <Route path="/editor/:roomId" element={<EditorPage/>}></Route>
             <Route path="/preview/:roomId" element={<PreviewPage/>}></Route>
+            <Route path="/*" element={<NotFoundPage />} />
           </Routes>
         </BrowserRouter>
       {/* </SharedStateProvider> */}

@@ -60,7 +60,7 @@ const PreviewPage = () => {
             id="prevew-page"
             srcDoc={Code}
             title="output"
-            sandbox="allow-same-origin allow-scripts allow-forms"
+            sandbox="allow-same-origin allow-scripts allow-forms allow-modals"
             width="100%"
             height="100%"
             frameBorder="0"

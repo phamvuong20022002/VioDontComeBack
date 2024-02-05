@@ -1,0 +1,78 @@
+.container-not-found {
+    background: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    animation: BGColorChange .1s infinite;
+}
+
+.container-not-found img {
+    width: 180vh;
+    height: auto;
+}
+
+.container-not-found h1 {
+    position: absolute;
+    top: -50vh;
+    font-size: 500px;
+    font-weight: 800;
+    color: black;
+    animation: blink 0.8s infinite alternate, colorChange .1s infinite;
+}
+
+@keyframes BGColorChange {
+    0% {
+        background-color: white;
+    }
+
+    25% {
+        background-color: #5271ff;
+    }
+
+    50% {
+        background-color: #004aad;
+    }
+
+    75% {
+        background-color: #282a36;
+    }
+
+    100% {
+        background-color: white;
+    }
+}
+
+@keyframes colorChange {
+    0% {
+        color: white;
+    }
+
+    25% {
+        color: #5271ff;
+    }
+
+    50% {
+        color: #004aad;
+    }
+
+    75% {
+        color: #282a36;
+    }
+
+    100% {
+        color: white;
+    }
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
+}
