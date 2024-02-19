@@ -17,7 +17,7 @@ import { LINKS } from "../assets/links/index";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import { checkOpenAPIKey } from "../helpers/CheckAPIKey";
 import { maskApiKey } from "../helpers/MaskAPIKey";
-
+import QuestionTextArea from "./QuestionTextArea";
 
 const examples = [
   "Create chatbox using jsx.",
@@ -27,125 +27,22 @@ const examples = [
 ];
 
 const ChatBox = () => {
-  const { isChatBoxOpen, setIsChatBoxOpen, question, setQuestion} = useContext(EditorPageContext);
+  const { isChatBoxOpen, setIsChatBoxOpen, isFetching, setIsFetching } =
+    useContext(EditorPageContext);
 
   /* Max z-index of monaco editor is 11*/
   const zIndex = isChatBoxOpen ? 12 : 0;
   const [inputValue, setInputValue] = useState("");
   const [chats, setChats] = useState([]);
-  const inputRef = useRef(null);
-  const timeoutRef = useRef(null);
-  const [isFetching, setIsFetching] = useState(false);
+  // const inputRef = useRef(null);
+  // const timeoutRef = useRef(null);
+  // const [isFetching, setIsFetching] = useState(false);
   const [isDisplaySettings, setIsDisplaySettings] = useState(false);
   const [isDarkModeChatBox, setIsDarkModeChatBox] = useState(true);
   const [isEnterKey, setIsEnterKey] = useState(false);
   const [inputAPIValue, setInputAPIValue] = useState("");
   const [errorMessage, setErrorMessage] = useState({});
-  const [validAPI, setValidAPI] = useState("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");
-
-  useEffect(() => {
-    // Clear the previous timeout
-    clearTimeout(timeoutRef.current);
-
-    // Set a new timeout
-    // Use Timeout to Box Chat slide more smoothly
-    timeoutRef.current = setTimeout(() => {
-      if (isChatBoxOpen && inputRef.current) {
-        inputRef.current.focus();
-        // Set value(question) for input
-        if (question) {
-          setInputValue(question);
-          inputRef.current.focus();
-        }
-      }
-    }, 300);
-  }, [isChatBoxOpen, question]);
-
-  const handleInputChange = (e) => {
-    setInputValue(e.target.value);
-  };
-
-  const handleClickAbort = () => {
-    clearTimeout(timeoutRef.current);
-
-    // No fetch request in progress, clear input and focus
-    if (!isFetching) {
-      setInputValue("");
-      inputRef.current.focus();
-    }
-  };
-
-  const handleSendMessage = async () => {
-    if (inputValue.trim() && !isFetching) {
-      setIsFetching(true);
-      // Handle sending the message
-      // setChats([...chats, { role: "user", content: inputValue.trim() }]);
-      setChats((prevChats) => [
-        ...prevChats,
-        { role: "user", content: inputValue.trim() },
-      ]);
-      // Reset the input value if needed
-      setInputValue("");
-      setQuestion("");
-
-      try {
-        const response = await fetch(process.env.REACT_APP_API_CHATBOX_V1, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            stream: true,
-            messages: [...chats, { role: "user", content: inputValue }],
-          }),
-        });
-
-        console.log("readData::", response.body, "\n");
-        if (response.body.locked === false) {
-          const data = await response.json();
-          if (data.status === "error") {
-            toast.error(
-              `Error ${data.metadata.code}: ${data.metadata.message}`
-            );
-          }
-        }
-
-        const readData = response.body
-          .pipeThrough(new TextDecoderStream())
-          .getReader();
-        let aiRes = "";
-        while (true) {
-          const { done, value } = await readData.read();
-
-          if (done) break;
-          aiRes += value;
-          setChats([
-            ...chats,
-            { role: "user", content: inputValue },
-            { role: "assistant", content: aiRes },
-          ]);
-        }
-      } catch (error) {
-        // console.error("Error in fetch:", error);
-        setChats([
-          ...chats,
-          { role: "user", content: inputValue }, // Include user message
-          {
-            role: "assistant",
-            content:
-              "Sorry! Have some problems with chat bot service. Please try again!",
-          },
-        ]);
-      } finally {
-        setIsFetching(false);
-      }
-    }
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
+  const [validAPI, setValidAPI] = useState("");
 
   const handleKeyAPIPress = (e) => {
     if (e.key === "Enter") {
@@ -243,10 +140,12 @@ const ChatBox = () => {
                 {validAPI ? (
                   <div className="api-box">
                     <div className="api-title">Available API</div>
-                    <pre className="api-key">
-                      {maskApiKey(validAPI)}
-                    </pre>
-                    <MdOutlineChangeCircle id="icon-change-api" title="Change API" onClick={()=>setValidAPI("")}/>
+                    <pre className="api-key">{maskApiKey(validAPI)}</pre>
+                    <MdOutlineChangeCircle
+                      id="icon-change-api"
+                      title="Change API"
+                      onClick={() => setValidAPI("")}
+                    />
                   </div>
                 ) : (
                   <div className="input-box">
@@ -356,50 +255,15 @@ const ChatBox = () => {
               </div>
             </div>
           )}
-
-          {/* Question box */}
-          <div className="questions-box">
-            <div className="question-wrap">
-              <div className="question">
-                {/* <input
-                  type="text"
-                  className="question-input"
-                  placeholder="Type your message here..."
-                  autoFocus={isChatBoxOpen}
-                  value={inputValue}
-                  onChange={handleInputChange}
-                  onKeyPress={handleKeyPress}
-                  ref={inputRef}
-                /> */}
-                <textarea
-                  rows="100"
-                  cols="100"
-                  style={{ resize: 'none' }}
-                  className="question-input"
-                  placeholder="Type your message here..."
-                  onChange={handleInputChange}
-                  autoFocus={isChatBoxOpen}
-                  onKeyPress={handleKeyPress}
-                  value={inputValue}
-                  ref={inputRef}
-                  >
-                </textarea>
-                <span className="question-icon">
-                  {isFetching ? (
-                    <FaRegStopCircle
-                      className="chatBox-icon"
-                      id="stopChat-icon"
-                      title="Stop"
-                      onClick={handleClickAbort}
-                    />
-                  ) : (
-                    <FiSend className="icon-send" onClick={handleSendMessage} />
-                  )}
-                </span>
-              </div>
-              <small> AI can generate incorrect information.</small>
-            </div>
-          </div>
+          {/* Input Questions */}
+          <QuestionTextArea
+            isFetching={isFetching}
+            setChats={setChats}
+            chats={chats}
+            setIsFetching={setIsFetching}
+            setInputValue={setInputValue}
+            inputValue={inputValue}
+          />
         </div>
       </div>
     </div>

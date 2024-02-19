@@ -103,7 +103,7 @@ const Pet = ({editorRef}) => {
 
   useEffect(() => {
     const callChatBot = () => {
-      const question = '```\n' + getSelectedText(editorRef); // add prefix ``` to the question
+      const question = '```\n' + getSelectedText(editorRef) + '\n```\n'; // add prefix ``` to the question
       if(!question) { 
         setIsChatBoxOpen(false);
       }
