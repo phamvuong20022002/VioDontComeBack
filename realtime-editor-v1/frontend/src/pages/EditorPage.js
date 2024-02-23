@@ -44,8 +44,10 @@ import { LuPanelBottomClose } from "react-icons/lu";
 import Pet from "../components/Pet.js";
 import { useMonaco } from "@monaco-editor/react";
 import { EditorPageProvider, EditorPageContext } from "../contexts/editorpage_contexts/index.js";
+import { AppContext } from "../contexts/main_context/index.js";
 
 const EditorPage = () => {
+  const {refreshOutput, setRefreshOutput} = useContext(AppContext)
   const socketRef = useRef(null);
   const codeRef = useRef("");
   const location = useLocation();
@@ -63,7 +65,6 @@ const EditorPage = () => {
   const [themeData, setThemeData] = useState("vs-dark");
   const monaco = useMonaco();
   const editorRef = useRef(null);
-  // const {editorRef} = useContext(EditorPageContext);
 
   // var editorSpace = null;
   const editorSpace = useRef(null);
@@ -189,12 +190,15 @@ const EditorPage = () => {
         roomId={roomId}
         tab={tab}
         onCodeChange={(code) => {
+          setRefreshOutput(true);
           codeRef.current = code;
         }}
         themeData={themeData}
         editorRef={editorRef}
       />
     );
+
+    setRefreshOutput(true);
   }
   /*Request Tad Data for Rendering Editor */
   async function showEditor(socketRef, tabId) {
@@ -674,6 +678,12 @@ const EditorPage = () => {
     };
     fetchTheme();
   }, [monaco]);
+  /*Refresh Ouput */
+  useEffect(()=>{
+    if(refreshOutput){
+      setRefreshOutput(false);
+    }
+  },[refreshOutput === true])
   
   return (
     <EditorPageProvider>
@@ -795,7 +805,7 @@ const EditorPage = () => {
                 {/* Output */}
                 <div className="outputSpace" id="right-panel">
                   {socketRef.current !== null && (
-                    <Output socketRef={socketRef} roomId={roomId} />
+                    <Output socketRef={socketRef} roomId={roomId}/>
                     )}
                 </div>
               </Split>
@@ -809,4 +819,4 @@ const EditorPage = () => {
   );
 };
 
-export default EditorPage;
+export default memo(EditorPage);

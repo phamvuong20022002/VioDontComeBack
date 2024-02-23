@@ -10,4 +10,4 @@ const Client = ({username}) => {
   )
 }
 
-export default Client;
+export default memo(Client);

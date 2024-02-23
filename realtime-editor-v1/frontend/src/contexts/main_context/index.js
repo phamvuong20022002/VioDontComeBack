@@ -1,18 +1,21 @@
-import { createContext, useRef } from "react";
+import { createContext, useRef, useState} from "react";
 
-export const EditorPageContext = createContext({});
+export const AppContext = createContext({});
 
-export const EditorPageProvider = ({ children }) => {
+export const AppProvider = ({ children }) => {
 
   const editorRef = useRef(null);
+  const [refreshOutput, setRefreshOutput] = useState(false);
 
   return (
-    <EditorPageContext.Provider
+    <AppContext.Provider
       value={{
         editorRef,
+        refreshOutput,
+        setRefreshOutput
       }}
     >
       {children}
-    </EditorPageContext.Provider>
+    </AppContext.Provider>
   );
 };

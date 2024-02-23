@@ -69,7 +69,7 @@
     padding-left: 2px;
 }
 
-.chat-box #settings-icon{
+.chat-box #settings-icon {
     padding-left: 0 !important;
     transition: transform 0.5s ease-in-out;
 }
@@ -169,6 +169,24 @@
     background-color: #424242;
 }
 
+.response__content-box {
+    border-radius: var(--border-radius);
+    background-color: var(--color-bg);
+    max-width: 100%;
+    /* overflow: hidden; */
+}
+
+.response__text {
+    padding: var(--spacing-md);
+}
+
+.code-pre {
+    background-color: var(--color-bg-shade);
+    border-radius: var(--border-radius);
+    scrollbar-width: thin;
+    overflow-x: auto;
+}
+
 .questions-box {
     display: flex;
     justify-content: center;
@@ -223,26 +241,27 @@
 }
 
 /* Light mode */
-.light-mode .chatbox-bot{
-    background-color: #eee !important;
-    color: rgb(30 41 59) !important;
-}
-.light-mode .chatbox-bot input{
+.light-mode .chatbox-bot {
     background-color: #eee !important;
     color: rgb(30 41 59) !important;
 }
 
-.light-mode .chatbox-bot .example{
+.light-mode .chatbox-bot input {
+    background-color: #eee !important;
+    color: rgb(30 41 59) !important;
+}
+
+.light-mode .chatbox-bot .example {
     border: 1px solid rgb(30 41 59) !important;
     color: #1c1e29 !important;
 }
 
-.light-mode .chatbox-bot .example:hover{
+.light-mode .chatbox-bot .example:hover {
     background-color: #c2c2c2 !important;
     color: rgb(30 41 59) !important;
 }
 
-.light-mode .chatbox-bot .answer-wrap{
+.light-mode .chatbox-bot .answer-wrap {
     background-color: #eee !important;
 }
 
@@ -344,31 +363,31 @@
     transition: display 0.3s ease-out;
 }
 
-.custom-bottom .api-box{
+.custom-bottom .api-box {
     display: flex;
     width: 100%;
     gap: 0.8rem;
     align-items: center;
 }
 
-.api-box .api-title{
+.api-box .api-title {
     font-size: 15px;
     font-weight: 500;
     padding-bottom: 10px;
 }
 
-.api-box .api-key{
+.api-box .api-key {
     max-width: 60%;
     overflow-y: auto;
 }
 
-.api-box #icon-change-api{
+.api-box #icon-change-api {
     font-size: 20px;
     padding-bottom: 10px;
     cursor: pointer;
 }
 
-.api-box #icon-change-api:hover{
+.api-box #icon-change-api:hover {
     color: #999999;
     padding-bottom: 10px;
 }
@@ -403,7 +422,7 @@
     color: #1c1e29;
 }
 
-.input-wrap #submit-api-icon{
+.input-wrap #submit-api-icon {
     cursor: pointer;
 }
 
@@ -424,12 +443,12 @@
     cursor: pointer;
 }
 
-.input-box .error-input{
+.input-box .error-input {
     font-size: small;
     color: #ff3333;
 }
 
-.input-box .error-input a{
+.input-box .error-input a {
     /* text-decoration: none; */
     color: #c2c2c2;
 }

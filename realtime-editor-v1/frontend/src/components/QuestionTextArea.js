@@ -1,11 +1,11 @@
-import React, { useState, useContext, useRef, useEffect } from "react";
+import React, { useState, useContext, useRef, useEffect, memo} from "react";
 import { FaRegStopCircle } from "react-icons/fa";
 import { FiSend } from "react-icons/fi";
 import { EditorPageContext } from "../contexts/editorpage_contexts";
 
-const QuestionTextArea = ({ setChats, chats, setInputValue, inputValue }) => {
-  const { isChatBoxOpen, setQuestion, question, isFetching, setIsFetching } =
-    useContext(EditorPageContext);
+const QuestionTextArea = ({handleSendMessage, setInputValue, inputValue }) => {
+  console.log('input rerendering...');
+  const { isChatBoxOpen, question, isFetching } = useContext(EditorPageContext);
   const inputRef = useRef(null);
   const timeoutRef = useRef(null);
 
@@ -34,61 +34,6 @@ const QuestionTextArea = ({ setChats, chats, setInputValue, inputValue }) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
-    }
-  };
-
-  const handleSendMessage = async () => {
-    if (inputValue.trim() && !isFetching) {
-      setIsFetching(true);
-      // Handle sending the message
-      // setChats([...chats, { role: "user", content: inputValue.trim() }]);
-      setChats((prevChats) => [
-        ...prevChats,
-        { role: "user", content: inputValue.trim() },
-      ]);
-      // Reset the input value if needed
-      setInputValue("");
-      setQuestion("");
-
-      try {
-        const response = await fetch(process.env.REACT_APP_API_CHATBOX_V1, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            stream: true,
-            messages: [...chats, { role: "user", content: inputValue }],
-          }),
-        });
-
-        const readData = response.body
-          .pipeThrough(new TextDecoderStream())
-          .getReader();
-        let aiRes = "";
-        while (true) {
-          const { done, value } = await readData.read();
-
-          if (done) break;
-          aiRes += value;
-          setChats([
-            ...chats,
-            { role: "user", content: inputValue },
-            { role: "assistant", content: aiRes },
-          ]);
-        }
-      } catch (error) {
-        // console.error("Error in fetch:", error);
-        setChats([
-          ...chats,
-          { role: "user", content: inputValue }, // Include user message
-          {
-            role: "assistant",
-            content:
-              "Sorry! Have some problems with chat bot service. Please try again!",
-          },
-        ]);
-      } finally {
-        setIsFetching(false);
-      }
     }
   };
 
@@ -137,4 +82,4 @@ const QuestionTextArea = ({ setChats, chats, setInputValue, inputValue }) => {
   );
 };
 
-export default QuestionTextArea;
+export default memo(QuestionTextArea);

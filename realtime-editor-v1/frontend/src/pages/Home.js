@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import {v4 as uuidV4} from 'uuid';
 import toast from 'react-hot-toast';
 import {useNavigate, useLocation} from 'react-router-dom';
@@ -105,4 +105,4 @@ const Home = () => {
   )
 }
 
-export default Home
+export default memo(Home)

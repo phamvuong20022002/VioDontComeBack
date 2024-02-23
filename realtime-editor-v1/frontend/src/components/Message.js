@@ -7,6 +7,7 @@ import React, { useEffect, useState } from "react";
 import { BsClipboard2Fill, BsCheckCircleFill } from "react-icons/bs";
 import "../Message.css";
 
+
 export default function Message({ content }) {
   const [isCopy, setIsCopy] = useState(false);
 

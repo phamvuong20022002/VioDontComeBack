@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useContext } from "react";
+import React, { useState, useRef, useEffect, useContext, memo } from "react";
 import "../Chatbox.css";
 import { TbNewSection, TbSettings } from "react-icons/tb";
 import { FiSend } from "react-icons/fi";
@@ -18,6 +18,8 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import { checkOpenAPIKey } from "../helpers/CheckAPIKey";
 import { maskApiKey } from "../helpers/MaskAPIKey";
 import QuestionTextArea from "./QuestionTextArea";
+import { getFormattedText } from "../utils/utlis";
+import { ChatContent } from "./ChatContent";
 
 const examples = [
   "Create chatbox using jsx.",
@@ -27,7 +29,7 @@ const examples = [
 ];
 
 const ChatBox = () => {
-  const { isChatBoxOpen, setIsChatBoxOpen, isFetching, setIsFetching } =
+  const { isChatBoxOpen, setIsChatBoxOpen, isFetching, setIsFetching, setQuestion} =
     useContext(EditorPageContext);
 
   /* Max z-index of monaco editor is 11*/
@@ -43,6 +45,61 @@ const ChatBox = () => {
   const [inputAPIValue, setInputAPIValue] = useState("");
   const [errorMessage, setErrorMessage] = useState({});
   const [validAPI, setValidAPI] = useState("");
+
+  const handleSendMessage = async () => {
+    if (inputValue.trim() && !isFetching) {
+      setIsFetching(true);
+      // Handle sending the message
+      // setChats([...chats, { role: "user", content: inputValue.trim() }]);
+      setChats((prevChats) => [
+        ...prevChats,
+        { role: "user", content: inputValue.trim() },
+      ]);
+      // Reset the input value if needed
+      setInputValue("");
+      setQuestion("");
+
+      try {
+        const response = await fetch(process.env.REACT_APP_API_CHATBOX_V1, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            stream: true,
+            messages: [...chats, { role: "user", content: inputValue }],
+          }),
+        });
+
+        const readData = response.body
+          .pipeThrough(new TextDecoderStream())
+          .getReader();
+        let aiRes = "";
+        while (true) {
+          const { done, value } = await readData.read();
+
+          if (done) break;
+          aiRes += value;
+          setChats([
+            ...chats,
+            { role: "user", content: inputValue },
+            { role: "assistant", content: aiRes },
+          ]);
+        }
+      } catch (error) {
+        // console.error("Error in fetch:", error);
+        setChats([
+          ...chats,
+          { role: "user", content: inputValue }, // Include user message
+          {
+            role: "assistant",
+            content:
+              "Sorry! Have some problems with chat bot service. Please try again!",
+          },
+        ]);
+      } finally {
+        setIsFetching(false);
+      }
+    }
+  };
 
   const handleKeyAPIPress = (e) => {
     if (e.key === "Enter") {
@@ -83,7 +140,7 @@ const ChatBox = () => {
     if (isChatBoxOpen && container) {
       container.scrollTop = container?.scrollHeight;
     }
-  }, [chats, isChatBoxOpen, inputValue]);
+  }, [chats, isChatBoxOpen]);
 
   return (
     <div className="chatbox-container" style={{ zIndex }}>
@@ -227,7 +284,9 @@ const ChatBox = () => {
                     </span>
                   )}
                   <div className="answer">
-                    <Message content={item.content} />
+                    <ChatContent text={getFormattedText(item.content)}>
+                    </ChatContent>
+                    {/* <Message content={item.content} /> */}
                   </div>
                 </div>
               ))}
@@ -257,10 +316,7 @@ const ChatBox = () => {
           )}
           {/* Input Questions */}
           <QuestionTextArea
-            isFetching={isFetching}
-            setChats={setChats}
-            chats={chats}
-            setIsFetching={setIsFetching}
+            handleSendMessage={handleSendMessage}
             setInputValue={setInputValue}
             inputValue={inputValue}
           />
@@ -270,4 +326,4 @@ const ChatBox = () => {
   );
 };
 
-export default ChatBox;
+export default memo(ChatBox);

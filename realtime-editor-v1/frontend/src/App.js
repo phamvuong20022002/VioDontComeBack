@@ -4,12 +4,13 @@ import Home from './pages/Home';
 import EditorPage from './pages/EditorPage';
 import PreviewPage from './pages/PreviewPage';
 import NotFoundPage from './pages/NotFoundPage';
-import { SharedStateProvider } from './helpers/SharedStateContext';
+import { AppProvider } from './contexts/main_context/index';
 import {Toaster} from 'react-hot-toast'
+import { memo } from 'react';
 
 function App() {
   return (
-    <>
+    <AppProvider>
       <div>
         <Toaster
           position="top-right"
@@ -33,11 +34,11 @@ function App() {
         </BrowserRouter>
       {/* </SharedStateProvider> */}
 
-    </>
+    </AppProvider>
   );
 }
 
-export default App;
+export default memo(App);
 
 
 

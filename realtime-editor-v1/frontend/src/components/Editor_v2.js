@@ -1,23 +1,24 @@
-import React, { useContext, useEffect, useRef } from "react";
+import React, { useContext, useEffect, useRef, memo, useState, useTransition} from "react";
 import Editor from "@monaco-editor/react";
 import ACTIONS from "../Actions";
-import { EditorPageContext } from "../contexts/editorpage_contexts";
 
 const MonacoEditor = ({ socketRef, roomId, tab, onCodeChange, themeData, editorRef}) => {
   // const editorRef = useRef(null);
-  // const {editorRef} = useContext(EditorPageContext);
   const localChangeRef = useRef(false);
+  const [isPending, startTransition] = useTransition();
 
   const handleEditorChange = (value, event) => {
+    startTransition(() => {
     if (!localChangeRef.current) {
       onCodeChange(tab.tabID + "|" + value);
-      socketRef.current.emit(ACTIONS.CODE_CHANGE, {
-        roomId,
-        tabId: tab.tabID,
-        code: value,
-        origin: "local", // Add an origin property to the payload
-      });
-    }
+        socketRef.current.emit(ACTIONS.CODE_CHANGE, {
+          roomId,
+          tabId: tab.tabID,
+          code: value,
+          origin: "local", // Add an origin property to the payload
+        });
+      }
+    });
   };
 
   const handleSocketCodeChange = ({ tabId, code, origin }) => {
@@ -29,6 +30,8 @@ const MonacoEditor = ({ socketRef, roomId, tab, onCodeChange, themeData, editorR
   };
 
   useEffect(() => {
+    // setRefreshOutput(true);
+    
     if (socketRef.current) {
       socketRef.current.on(ACTIONS.CODE_CHANGE, handleSocketCodeChange);
     }
@@ -69,4 +72,4 @@ const MonacoEditor = ({ socketRef, roomId, tab, onCodeChange, themeData, editorR
   );
 };
 
-export default MonacoEditor;
+export default memo(MonacoEditor);

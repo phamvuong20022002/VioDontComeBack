@@ -1,0 +1,63 @@
+.clipboard {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  width: 100%;
+  /* padding: 0 var(--spacing-md);   */
+  margin-bottom: -0.5em;
+  background-color: #3a404b;
+  border-top-right-radius: 5px;
+  border-top-left-radius: 5px;
+}
+
+.clipboard__language {
+  display: flex;
+  align-items: center;
+  border-radius: var(--border-radius);
+  padding-left: 5px;
+}
+
+.clipboard__button {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  margin: unset;
+  padding: unset;
+  border: unset;
+  background-color: transparent;
+  cursor: pointer;
+  overflow: hidden;
+  color: rgb(212, 212, 212);
+}
+
+.clipboard__button:hover{
+  color: #929292;
+}
+.clipboard__button:focus>svg {
+  color: rgb(212, 212, 212);
+}
+
+.svg-copy {
+  transform: translateY(7px);
+  transition: transform 0.3s;
+}
+
+.svg-copy.hide {
+  transform: translateY(-150%);
+}
+
+.svg-checkmark {
+  transform: translateY(150%);
+  transition: transform 0.3s;
+}
+
+.svg-checkmark.active {
+  transform: translateY(-7px);
+}
+
+.svg-checkmark>path {
+  color: rgb(212, 212, 212);
+}

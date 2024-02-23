@@ -1,7 +1,7 @@
 //Wijmo
 
 
-import { React, useEffect, useState, useRef, memo } from "react";
+import { React, useEffect, useState, useRef, memo, useContext, useTransition } from "react";
 import {
   VscMultipleWindows,
   VscRefresh,
@@ -15,17 +15,20 @@ import { initTabIDsTemplate, TIMEOUT_REFRESH_MONITOR } from "../assets/variables
 import _ from 'lodash';
 import { getCodeWithSocket,  generateCode} from "../helpers/CodeSelectedTabs.js";
 import LoadingSpinner from "./LoadingSpinner.js";
+import { AppContext } from "../contexts/main_context/index.js";
 
 
 
 const initHTMLContent = "<html><head></head><body>Hello, iframe content!</body></html>";
 const Output = ({socketRef, roomId}) => {
+  const {refreshOutput, setRefreshOutput} = useContext(AppContext); 
   const [displaySelect, setDisplaySelect] = useState(false);
   const [tabs, setTabs] = useState([]);
   const [selectedTabs, setSelectedTabs] = useState(initTabIDsTemplate);
   const [previewFrame, setPreviewFrame] = useState(initHTMLContent);
-  const [refresh, setRefresh] = useState(false);
+  // const [refresh, setRefresh] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isPending, startTransition] = useTransition();
 
   // Add listener for components
   useEffect(() => {
@@ -41,46 +44,50 @@ const Output = ({socketRef, roomId}) => {
     };
   }, [loading]);
 
-  useEffect(() => {
-    //function get code have tabIds in selectedTabs array
-    const getCodeFromSelectedTabs = async () =>{
-      try {
-        //get code form server
-        const data = await getCodeWithSocket(socketRef.current, { roomId, data: selectedTabs, socketId: socketRef.current.id});
-        //generate code for previewFrame 
-        const htmlContent = generateCode(data);
-        // rerender iframe
-        setPreviewFrame(htmlContent);
-        // Turn off loading
-        setLoading(false);
-      } catch (error) {
-        console.error(error);
-        // Turn off loading
-        setLoading(false);
-      }
+  //function get code have tabIds in selectedTabs array
+  const getCodeFromSelectedTabs = async () =>{
+    try {
+      //get code form server
+      const data = await getCodeWithSocket(socketRef.current, { roomId, data: selectedTabs, socketId: socketRef.current.id});
+      //generate code for previewFrame 
+      const htmlContent = generateCode(data);
+      // rerender iframe
+      setPreviewFrame(htmlContent);
+      // Turn off loading
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
+      // Turn off loading
+      setLoading(false);
     }
+  }
+  //Main function
+  useEffect(() => {
+    startTransition(()=>{
+      //check length of selectedTabs
+      if(selectedTabs.length === 0){
+        setPreviewFrame(initHTMLContent);
+      }else{
+        //save selected tabs to server
+        if(socketRef.current !== null){
+          // save selectedTabs to server
+          socketRef.current.emit(ACTIONS.SAVE_SELECTEDTABS,{
+            roomId,
+            socketId: socketRef.current.id,
+            data: selectedTabs
+          })
+        }
+        // get code from selectedTabs in server
+        getCodeFromSelectedTabs();
+      }
+    })
 
     //refresh code every 1 second
-    setTimeout(() => {
-      setRefresh(!refresh);
-    }, TIMEOUT_REFRESH_MONITOR);
-    //check length of selectedTabs
-    if(selectedTabs.length === 0){
-      setPreviewFrame(initHTMLContent);
-    }else{
-      if(socketRef.current !== null){
-        // save selectedTabs to server
-        socketRef.current.emit(ACTIONS.SAVE_SELECTEDTABS,{
-          roomId,
-          socketId: socketRef.current.id,
-          data: selectedTabs
-        })
-      }
-      // get code from selectedTabs
-      getCodeFromSelectedTabs();
-    }
+    // setTimeout(() => {
+    //   setRefresh(!refresh);
+    // }, TIMEOUT_REFRESH_MONITOR);
 
-  }, [refresh, loading]);
+  }, [refreshOutput, loading, selectedTabs]);
 
   /*----FUNCTION AREA----*/
   // toggle select from check boxs
@@ -95,13 +102,14 @@ const Output = ({socketRef, roomId}) => {
   }
   //Get all chosen tabs
   const handleTabChange = (tabID) => {
-    // Add or remove the tab from the selectedTabs array
-    if (selectedTabs.some((selected) => selected === tabID)) {
-      setSelectedTabs(selectedTabs.filter((selected) => selected !== tabID));
-    } else {
-      setSelectedTabs([...selectedTabs, tabID]);
-      
-    }
+    startTransition(() => {
+      // Add or remove the tab from the selectedTabs array
+      if (selectedTabs.some((selected) => selected === tabID)) {
+        setSelectedTabs(selectedTabs.filter((selected) => selected !== tabID));
+      } else {
+        setSelectedTabs([...selectedTabs, tabID]);
+      }
+    })
   };
 
   //Style icon buttons
@@ -215,13 +223,9 @@ const Output = ({socketRef, roomId}) => {
               ></iframe>
             </div>
           </div>
-          
-          {/* Console Ouput */}
-          {/* <Console loading={loading}/> */}
-
       </div>)}
     </div>
   );
 };
 
-export default Output;
+export default memo(Output);

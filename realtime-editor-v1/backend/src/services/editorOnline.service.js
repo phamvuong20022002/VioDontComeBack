@@ -227,9 +227,9 @@ class EditorOnlineService {
         });
 
         //SAVE SELECTED TABS
-        socket.on(ACTIONS.SAVE_SELECTEDTABS, ({roomId, socketId, data}) => {
+        socket.on(ACTIONS.SAVE_SELECTEDTABS, ({roomId, socketId, data, isPreviewing=false}) => {
             // ADD SELECTED TABS
-            if(roomId !== undefined && socketId !== undefined){
+            if(roomId !== undefined && socketId !== undefined && !isPreviewing){
                 addSelectedTabs({roomId, socketId, data});
             }
             // RESPONSE SELECTED TABS ARRAY

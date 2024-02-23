@@ -17,7 +17,7 @@ export const EditorPageProvider = ({ children }) => {
         setIsChatBoxOpen,
         editorRef,
         isFetching,
-        setIsFetching
+        setIsFetching,
       }}
     >
       {children}
