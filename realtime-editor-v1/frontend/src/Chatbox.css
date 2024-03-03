@@ -77,6 +77,8 @@
 .answers-box-chats {
     height: 80%;
     overflow-x: scroll;
+    /* overflow-y: scroll; */
+
     /* padding: 2rem; */
 }
 
@@ -105,6 +107,7 @@
     padding-left: 1.5rem;
     max-width: 90%;
     overflow-x: auto;
+    /* overflow-y:scroll; */
 }
 
 .answers-box-chats .answer pre {

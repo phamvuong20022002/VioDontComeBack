@@ -52,6 +52,7 @@ const QuestionTextArea = ({handleSendMessage, setInputValue, inputValue }) => {
       <div className="question-wrap">
         <div className="question">
           <textarea
+            id="question-box-chats"
             rows="100"
             cols="100"
             style={{ resize: "none" }}

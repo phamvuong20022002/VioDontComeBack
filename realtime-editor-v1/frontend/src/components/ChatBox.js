@@ -58,7 +58,7 @@ const ChatBox = () => {
   const [errorMessage, setErrorMessage] = useState({});
   const [validAPI, setValidAPI] = useState("");
   const [dataChats, setDataChats] = useState([]);
-  const [isScrolling, setIsScrolling] = useState(dataChats.length);
+  const [heightAdder, setHeightAdder] = useState('auto');
 
   const handleSendMessage = useCallback(async () => {
     if (inputValue.trim() && !isFetching) {
@@ -103,7 +103,9 @@ const ChatBox = () => {
             { role: "assistant", content: aiRes },
           ]);
         }
-        //Save chats 
+        //add height for asisstant
+        addHeightForAnswerWrap();
+        //Save chats
         setDataChats([
           ...dataChats,
           { role: "user", content: inputValue },
@@ -134,6 +136,29 @@ const ChatBox = () => {
       }
     }
   }, [inputValue, isFetching, chats, dataChats]);
+
+  //Add heights for Assistant if answers lenght of user and assisstant not fix answers-box-chats (521px)
+  const addHeightForAnswerWrap = () => {
+    const answerWrap = Array.from(
+      document.getElementsByClassName("answer-wrap")
+    );
+    if (!answerWrap.length) {
+      return;
+    }
+    let answerWrapHeight = 0;
+    let container = document.getElementById("answers-box-chats");
+    console.log("container height::", container.clientHeight);
+    answerWrap.forEach((element) => {
+      // Perform actions on each element here
+      answerWrapHeight += element.clientHeight;
+    });
+
+    if(answerWrapHeight < container.clientHeight) {
+      const assistant = document.getElementsByClassName('answer-wrap assistant')
+      const assistantHeight = assistant[assistant.length-1].clientHeight;
+      setHeightAdder(assistantHeight + (container.clientHeight - answerWrapHeight) + 10 );
+    }
+  };
 
   const handleKeyAPIPress = (e) => {
     if (e.key === "Enter") {
@@ -183,14 +208,13 @@ const ChatBox = () => {
     let i = 2;
     function handleScroll() {
       if (answersBox?.scrollTop === 0) {
+        setHeightAdder('auto');
         if (dataChats.length % 2 === 1) {
           return;
         }
         // console.log("Bạn đã cuộn đến đỉnh của phần tử!");
-        if (dataChats.length >= (i + 2)) {
-          setChats([
-            ...dataChats.slice(-(i+2))
-          ]);
+        if (dataChats.length >= i + 2) {
+          setChats([...dataChats.slice(-(i + 2))]);
           i += 2;
         }
       }
@@ -203,16 +227,18 @@ const ChatBox = () => {
     };
   }, [dataChats, inputValue]);
 
-  useEffect(()=>{
-    let container = document.getElementById("answers-box-chats");
-    if (isChatBoxOpen && container) {
-      container.scrollTop = container?.scrollHeight;
-    }
-    if(chats.length > 2 && dataChats.length > 2 ) {
+  //setChat when input new question
+  useEffect(() => {
+    if (chats.length > 2 && dataChats.length > 2) {
+      // let container = document.getElementById("answers-box-chats");
+      // if (isChatBoxOpen && container) {
+      //   container.scrollTop = container?.scrollHeight;
+      // }
+      
       setChats([
         dataChats[dataChats.length - 1 - 1],
         dataChats[dataChats.length - 1 - 2],
-      ])
+      ]);
     }
   }, [inputValue, dataChats]);
 
@@ -229,7 +255,10 @@ const ChatBox = () => {
             className={`chatBox-icon ${isFetching ? "disabled" : ""} `}
             id="newChat-icon"
             title="New chat"
-            onClick={() => {setChats([]); setDataChats([])}}
+            onClick={() => {
+              setChats([]);
+              setDataChats([]);
+            }}
           />
           <span className="chatBox-title">Chat GPT</span>
 
@@ -342,7 +371,7 @@ const ChatBox = () => {
           {dataChats.length > 0 ? (
             <div className="answers-box-chats" id="answers-box-chats">
               {chats.map((item, index) => (
-                <div key={index} className={`answer-wrap ${item.role}`}>
+                <div key={index} className={`answer-wrap ${item.role}`} >
                   {item.role === "user" ? (
                     <span className="role">
                       <FaUser />
@@ -357,7 +386,7 @@ const ChatBox = () => {
                       />
                     </span>
                   )}
-                  <div className="answer">
+                  <div className="answer" style={{ height: item.role === 'user' ? 'auto' : heightAdder}}>
                     <ChatContent
                       text={getFormattedText(item.content)}
                     ></ChatContent>
@@ -381,7 +410,10 @@ const ChatBox = () => {
                   <div
                     key={index}
                     className="example"
-                    onClick={() => setInputValue(example)}
+                    onClick={() => {
+                      setInputValue(example);
+                      document.getElementById('question-box-chats')?.focus();
+                    }}
                   >
                     {example}
                   </div>

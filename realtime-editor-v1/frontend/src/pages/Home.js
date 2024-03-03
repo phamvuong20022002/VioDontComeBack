@@ -16,17 +16,17 @@ const Home = () => {
         e.preventDefault();
         const id = uuidV4().toString();
         setRoomID(id);
+        //focus username input
+        document.getElementById('inputUsername')?.focus();
         toast.success('Room created');
     }
 
     // Join a ROOM and Redirect to EditorPage (joinRoom Button)
     const joinRoom = () =>{
-        // RoomID or Username is required
-        if(!roomID || !username){
-            toast.error('Please enter Room ID and Username');
+        if(!username) {
+            toast.error('Please enter Username!');
             return;
         }
-
         // Redirect to EditorPage
         navigate(`/editor/${roomID}`,{
             state: {
@@ -38,6 +38,18 @@ const Home = () => {
     // Handle Enter Keyboard events
     const handleInputEnter = (e) => {
         if(e.code === 'Enter') {
+            if(!roomID ){
+                document.getElementById('inputRoomID')?.focus();
+                // RoomID or Username is required
+                toast.error('Please enter Room ID!');
+                return;
+            }
+            else{
+                if(!username){
+                    document.getElementById('inputUsername')?.focus();
+                    return;
+                }
+            }
             joinRoom();
         }
     }
@@ -49,10 +61,10 @@ const Home = () => {
     })
 
     useEffect(() => {
-        if(roomID) {
+        if(location.state?.roomId) {
             document.getElementById('inputUsername')?.focus();
         }
-    },[roomID])
+    })
 
   return (
     <div>
@@ -60,9 +72,10 @@ const Home = () => {
             (<div className="homePageWrapper">
                 <div className="formWrapper">
                     <img src="/logoRE.png" alt="infinity-logo"/>
-                    <h4 className="PasteIDRoomLabel"> Paste invitation ROOM ID </h4>
+                    <h4 className="PasteIDRoomLabel"> Paste invitation or new a ROOM ID </h4>
                     <div className="inputGroup">
                         <input 
+                            id="inputRoomID"
                             type="text" 
                             className="inputBox" 
                             placeholder="ROOMID" 
