@@ -1,4 +1,11 @@
-import React, { useState, useRef, useEffect, useContext, memo } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useContext,
+  memo,
+  useCallback,
+} from "react";
 import "../Chatbox.css";
 import { TbNewSection, TbSettings } from "react-icons/tb";
 import { FiSend } from "react-icons/fi";
@@ -29,8 +36,13 @@ const examples = [
 ];
 
 const ChatBox = () => {
-  const { isChatBoxOpen, setIsChatBoxOpen, isFetching, setIsFetching, setQuestion} =
-    useContext(EditorPageContext);
+  const {
+    isChatBoxOpen,
+    setIsChatBoxOpen,
+    isFetching,
+    setIsFetching,
+    setQuestion,
+  } = useContext(EditorPageContext);
 
   /* Max z-index of monaco editor is 11*/
   const zIndex = isChatBoxOpen ? 12 : 0;
@@ -45,13 +57,17 @@ const ChatBox = () => {
   const [inputAPIValue, setInputAPIValue] = useState("");
   const [errorMessage, setErrorMessage] = useState({});
   const [validAPI, setValidAPI] = useState("");
+  const [dataChats, setDataChats] = useState([]);
+  const [isScrolling, setIsScrolling] = useState(dataChats.length);
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = useCallback(async () => {
     if (inputValue.trim() && !isFetching) {
       setIsFetching(true);
-      // Handle sending the message
-      // setChats([...chats, { role: "user", content: inputValue.trim() }]);
       setChats((prevChats) => [
+        // ...prevChats,
+        { role: "user", content: inputValue.trim() },
+      ]);
+      setDataChats((prevChats) => [
         ...prevChats,
         { role: "user", content: inputValue.trim() },
       ]);
@@ -59,13 +75,15 @@ const ChatBox = () => {
       setInputValue("");
       setQuestion("");
 
+      // Handle sending the message
       try {
         const response = await fetch(process.env.REACT_APP_API_CHATBOX_V1, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             stream: true,
-            messages: [...chats, { role: "user", content: inputValue }],
+            // messages: [...chats, { role: "user", content: inputValue }],
+            messages: [...dataChats, { role: "user", content: inputValue }],
           }),
         });
 
@@ -78,17 +96,33 @@ const ChatBox = () => {
 
           if (done) break;
           aiRes += value;
+          //show streaming chats
           setChats([
-            ...chats,
+            // ...chats,
             { role: "user", content: inputValue },
             { role: "assistant", content: aiRes },
           ]);
         }
+        //Save chats 
+        setDataChats([
+          ...dataChats,
+          { role: "user", content: inputValue },
+          { role: "assistant", content: aiRes },
+        ]);
       } catch (error) {
         // console.error("Error in fetch:", error);
         setChats([
-          ...chats,
+          // ...chats,
           { role: "user", content: inputValue }, // Include user message
+          {
+            role: "assistant",
+            content:
+              "Sorry! Have some problems with chat bot service. Please try again!",
+          },
+        ]);
+        setDataChats([
+          ...dataChats,
+          { role: "user", content: inputValue },
           {
             role: "assistant",
             content:
@@ -99,7 +133,7 @@ const ChatBox = () => {
         setIsFetching(false);
       }
     }
-  };
+  }, [inputValue, isFetching, chats, dataChats]);
 
   const handleKeyAPIPress = (e) => {
     if (e.key === "Enter") {
@@ -134,13 +168,53 @@ const ChatBox = () => {
     setInputAPIValue("");
   };
 
+  //Add Scrollbar for answers box
   useEffect(() => {
-    //Add Scrollbar for answers box
     let container = document.getElementById("answers-box-chats");
     if (isChatBoxOpen && container) {
       container.scrollTop = container?.scrollHeight;
     }
   }, [chats, isChatBoxOpen]);
+
+  //Listen MaxScroll to Top
+  useEffect(() => {
+    let answersBox = document.getElementById("answers-box-chats");
+
+    let i = 2;
+    function handleScroll() {
+      if (answersBox?.scrollTop === 0) {
+        if (dataChats.length % 2 === 1) {
+          return;
+        }
+        // console.log("Bạn đã cuộn đến đỉnh của phần tử!");
+        if (dataChats.length >= (i + 2)) {
+          setChats([
+            ...dataChats.slice(-(i+2))
+          ]);
+          i += 2;
+        }
+      }
+    }
+
+    answersBox?.addEventListener("scroll", handleScroll);
+
+    return () => {
+      answersBox?.removeEventListener("scroll", handleScroll);
+    };
+  }, [dataChats, inputValue]);
+
+  useEffect(()=>{
+    let container = document.getElementById("answers-box-chats");
+    if (isChatBoxOpen && container) {
+      container.scrollTop = container?.scrollHeight;
+    }
+    if(chats.length > 2 && dataChats.length > 2 ) {
+      setChats([
+        dataChats[dataChats.length - 1 - 1],
+        dataChats[dataChats.length - 1 - 2],
+      ])
+    }
+  }, [inputValue, dataChats]);
 
   return (
     <div className="chatbox-container" style={{ zIndex }}>
@@ -155,7 +229,7 @@ const ChatBox = () => {
             className={`chatBox-icon ${isFetching ? "disabled" : ""} `}
             id="newChat-icon"
             title="New chat"
-            onClick={() => setChats([])}
+            onClick={() => {setChats([]); setDataChats([])}}
           />
           <span className="chatBox-title">Chat GPT</span>
 
@@ -265,7 +339,7 @@ const ChatBox = () => {
         {/* Chatbox */}
         <div className="chatbox-bot">
           {/* Answer box */}
-          {chats.length > 0 ? (
+          {dataChats.length > 0 ? (
             <div className="answers-box-chats" id="answers-box-chats">
               {chats.map((item, index) => (
                 <div key={index} className={`answer-wrap ${item.role}`}>
@@ -284,8 +358,9 @@ const ChatBox = () => {
                     </span>
                   )}
                   <div className="answer">
-                    <ChatContent text={getFormattedText(item.content)}>
-                    </ChatContent>
+                    <ChatContent
+                      text={getFormattedText(item.content)}
+                    ></ChatContent>
                     {/* <Message content={item.content} /> */}
                   </div>
                 </div>

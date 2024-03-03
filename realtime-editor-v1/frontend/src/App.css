@@ -388,8 +388,9 @@ input:focus::placeholder {
 
 .outputMonitor iframe{
   border: none;
-  height: 100vh;
+  height: 90vh;
   user-select: none;
+  max-height: 80%;
 }
 
 .separator-output{

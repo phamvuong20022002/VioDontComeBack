@@ -286,8 +286,8 @@ input:focus::placeholder {
   /* display: flex;  */
   /* border-top: 3px solid red; */
   height: 93.2vh;
-  max-height: 93.2vh;
-  overflow-y: auto;
+  max-height: 100%;
+  overflow: auto;
   background-color: #282a36;
 }
 
@@ -359,8 +359,11 @@ input:focus::placeholder {
 .outputMonitor{
   height: 80%;
   width: 99.5%;
-  /* overflow-y: auto; */
+  overflow: auto;
   border: none;
+  max-width: 99.5%;
+  max-height: 80%;
+
 }
 
 .consoleContainer{

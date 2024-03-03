@@ -4,7 +4,6 @@ import { FiSend } from "react-icons/fi";
 import { EditorPageContext } from "../contexts/editorpage_contexts";
 
 const QuestionTextArea = ({handleSendMessage, setInputValue, inputValue }) => {
-  console.log('input rerendering...');
   const { isChatBoxOpen, question, isFetching } = useContext(EditorPageContext);
   const inputRef = useRef(null);
   const timeoutRef = useRef(null);
@@ -30,11 +29,12 @@ const QuestionTextArea = ({handleSendMessage, setInputValue, inputValue }) => {
   const handleInputChange = (e) => {
     setInputValue(e.target.value);
   };
-  const handleKeyPress = (e) => {
+  const handleKeyPress = async (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      await handleSendMessage();
     }
+    return;
   };
 
   const handleClickAbort = () => {
