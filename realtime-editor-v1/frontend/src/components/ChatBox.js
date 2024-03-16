@@ -42,6 +42,7 @@ const ChatBox = () => {
     isFetching,
     setIsFetching,
     setQuestion,
+    question
   } = useContext(EditorPageContext);
 
   /* Max z-index of monaco editor is 11*/
@@ -201,7 +202,7 @@ const ChatBox = () => {
     }
   }, [chats, isChatBoxOpen]);
 
-  //Listen MaxScroll to Top
+  //Show old chats when sroll to top
   useEffect(() => {
     let answersBox = document.getElementById("answers-box-chats");
 
@@ -230,11 +231,6 @@ const ChatBox = () => {
   //setChat when input new question
   useEffect(() => {
     if (chats.length > 2 && dataChats.length > 2) {
-      // let container = document.getElementById("answers-box-chats");
-      // if (isChatBoxOpen && container) {
-      //   container.scrollTop = container?.scrollHeight;
-      // }
-      
       setChats([
         dataChats[dataChats.length - 1 - 1],
         dataChats[dataChats.length - 1 - 2],

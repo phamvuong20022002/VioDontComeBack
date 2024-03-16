@@ -1,15 +1,17 @@
-import React, { memo, useEffect, useState } from 'react';
+import React, { memo, useContext, useEffect, useState } from 'react';
 import {v4 as uuidV4} from 'uuid';
 import toast from 'react-hot-toast';
 import {useNavigate, useLocation} from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { AppContext } from '../contexts/main_context';
 
 const Home = () => {
+    const {userId, setUserId, userName, setUserName} = useContext(AppContext)
     const location = useLocation();
     const navigate = useNavigate();
     const [roomID, setRoomID] = useState(location.state?.roomId || '');
-    const [username, setUsername] = useState('');
     const [loading, setLoading] = useState(true);
+    const [inputName, setInputName] = useState(userName);
 
     // Create a new ROOM
     const createNewRoom = (e) =>{
@@ -21,17 +23,39 @@ const Home = () => {
         toast.success('Room created');
     }
 
+    const createUserID = () =>{
+        if(!localStorage.getItem('U_id')) {
+            const U_id = uuidV4().toString();
+            localStorage.setItem('U_id', U_id);
+            if(U_id){
+                setUserId(U_id);
+                return U_id;
+            }
+        }
+        return null;
+    }
+    
+    const storeUserName = (name) => {
+        localStorage.setItem('U_name', name);
+        setUserName(name);
+        return name;
+    }
+
     // Join a ROOM and Redirect to EditorPage (joinRoom Button)
     const joinRoom = () =>{
-        if(!username) {
+        if(!inputName) {
             toast.error('Please enter Username!');
             return;
         }
+        /*Create an user ID*/
+        createUserID();
+        /*store UserName */
+        storeUserName(inputName);
         // Redirect to EditorPage
         navigate(`/editor/${roomID}`,{
-            state: {
-                username,
-            },
+            // state: {
+            //     username,
+            // },
         })
     }
 
@@ -45,7 +69,7 @@ const Home = () => {
                 return;
             }
             else{
-                if(!username){
+                if(!inputName){
                     document.getElementById('inputUsername')?.focus();
                     return;
                 }
@@ -61,10 +85,11 @@ const Home = () => {
     })
 
     useEffect(() => {
+        console.log('userId::', userId);
         if(location.state?.roomId) {
             document.getElementById('inputUsername')?.focus();
         }
-    })
+    }, [userId, userName])
 
   return (
     <div>
@@ -90,8 +115,8 @@ const Home = () => {
                             type="text" 
                             className="inputBox" 
                             placeholder="USERNAME"
-                            onChange={(e)=>{setUsername(e.target.value)}}
-                            value={username}
+                            onChange={(e)=>{setInputName(e.target.value)}}
+                            value={inputName}
                             onKeyUp={handleInputEnter}
                         />
 

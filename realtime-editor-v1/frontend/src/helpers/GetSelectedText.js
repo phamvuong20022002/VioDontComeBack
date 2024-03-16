@@ -8,5 +8,5 @@ export const getSelectedText = (editorRef) => {
   else {
     selectedText = window.getSelection()?.toString();
   }
-  return selectedText;
+  return selectedText.trim();
 };

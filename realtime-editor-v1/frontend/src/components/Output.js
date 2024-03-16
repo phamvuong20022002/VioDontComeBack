@@ -138,6 +138,7 @@ const Output = ({socketRef, roomId}) => {
   };
   // Add listeners for rightIcon class
   function handleRightIcon(e){
+    console.log(e.target);
     if(e.target){
       if(e.target.id === null){
         return ;

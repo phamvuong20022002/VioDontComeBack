@@ -47,7 +47,7 @@ import { EditorPageProvider, EditorPageContext } from "../contexts/editorpage_co
 import { AppContext } from "../contexts/main_context/index.js";
 
 const EditorPage = () => {
-  const {refreshOutput, setRefreshOutput} = useContext(AppContext)
+  const {refreshOutput, setRefreshOutput, userId, userName} = useContext(AppContext)
   const socketRef = useRef(null);
   const codeRef = useRef("");
   const location = useLocation();
@@ -69,6 +69,17 @@ const EditorPage = () => {
   // var editorSpace = null;
   const editorSpace = useRef(null);
 
+  useEffect(()=>{
+    console.log("State userId::", userId);
+    console.log("State userName::", userName);
+
+
+    if(!userId || !userName){
+      reactNavigator("/");
+      return;
+    }
+  }, [userId, userName, socketRef?.current]);
+
   /*Create Socket for Sending and Listening Actions */
   useEffect(() => {
     // Create socket connection
@@ -86,14 +97,14 @@ const EditorPage = () => {
       // Send JOIN sign
       socketRef.current.emit(ACTIONS.JOIN, {
         roomId,
-        username: location.state?.username || "anonymous",
+        username: userName || "anonymous",//location.state?.username || "anonymous",
       });
 
       // Listening for JOINED
       socketRef.current.on(
         ACTIONS.JOINED,
         ({ clients, username, socketId }) => {
-          if (username !== location.state?.username) {
+          if (username !== userName) {
             toast.success(`${username} joined room`);
           }
           setClients(clients);
@@ -120,7 +131,7 @@ const EditorPage = () => {
 
           //turn off loading
           setLoading(false);
-        }, 500);
+        }, 200);
       });
 
       // Listening for DISCONNECTED
@@ -137,7 +148,7 @@ const EditorPage = () => {
     };
 
     // Fix miss username when join room by a link
-    if (!location.state) {
+    if (!userName) {
       toast.error("Please enter an USERNAME and try to join again!");
       // Redirect to HomePage
       reactNavigator("/", {
@@ -155,7 +166,7 @@ const EditorPage = () => {
       socketRef.current.off(ACTIONS.JOIN);
       socketRef.current.off(ACTIONS.DISCONNECTED);
     };
-  }, [loading, socketRef]);
+  }, [loading]);
 
   /*----FUNCTION AREA----*/
   /*Get TabID and Code from CodeRef */
@@ -383,12 +394,13 @@ const EditorPage = () => {
       const data = await getStatusSaveRoom(socketRef.current, roomId, false);
       if (data.status === "200") {
         reactNavigator("/");
-        return;
       } else {
         await templateSaveRoomError(
           "Have some problems during clean code, Please try again!"
         );
+        reactNavigator("/");
       }
+      return;
     }
   }
   /* Handle File Changed */

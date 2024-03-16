@@ -103,14 +103,15 @@ const Pet = ({editorRef}) => {
 
   useEffect(() => {
     const callChatBot = () => {
-      const question = getSelectedText(editorRef) + '\n';
-      if(!question) { 
-        setIsChatBoxOpen(false);
+      const question = getSelectedText(editorRef);
+      if(!question) {
+        setIsChatBoxOpen(!isChatBoxOpen);
+        setQuestion(null);
       }
       else {
         setIsChatBoxOpen(true);
+        setQuestion(question + '\n');
       }
-      setQuestion(question);
     }
 
     const HandleKeyDown = (event) =>{
