@@ -12,7 +12,7 @@ export const handleFileChange = (e) => {
         reject(error);
       }
     } else {
-      reject(new Error('No file selected'));
+      reject(new Error("No file selected"));
     }
   });
 };
@@ -35,15 +35,29 @@ export const readFileContents = (file) => {
 };
 
 export const getFileTypeFromMimeType = (mimeType) => {
-
   const lowerCaseMimeType = mimeType.toLowerCase();
-  return mimeMapping[lowerCaseMimeType] || 'unknown'; // Default to 'unknown' if not found
+  return mimeMapping[lowerCaseMimeType] || "unknown"; // Default to 'unknown' if not found
 };
 
 export const getFileNameWithoutExtension = (fileName) => {
-  const lastDotIndex = fileName.lastIndexOf('.');
+  const lastDotIndex = fileName.lastIndexOf(".");
   if (lastDotIndex !== -1) {
     return fileName.slice(0, lastDotIndex);
   }
   return fileName; // If no dot (.) is found, return the entire file name
+};
+
+export const extractAIAnswerContent = (line) => {
+  console.log("abcabc::::", line, "\n\n 123");
+  if (line.startsWith("data:")) {
+    const jsonStr = line.replace("data:", "").trim();
+    try {
+      const json = JSON.parse(jsonStr);
+      return json.choices?.[0]?.delta?.content || null;
+    } catch (error) {
+      console.error("Failed to parse JSON:", error);
+      return null;
+    }
+  }
+  return null;
 };

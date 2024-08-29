@@ -7,7 +7,7 @@ import React, {
   useCallback,
 } from "react";
 import "../Chatbox.css";
-import { TbNewSection, TbSettings } from "react-icons/tb";
+import { TbNewSection, TbSettings, TbCloudUpload } from "react-icons/tb";
 import { FiSend } from "react-icons/fi";
 import { FaUser, FaRegStopCircle, FaKey } from "react-icons/fa";
 import { PiWarningCircle } from "react-icons/pi";
@@ -25,8 +25,11 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import { checkOpenAPIKey } from "../helpers/CheckAPIKey";
 import { maskApiKey } from "../helpers/MaskAPIKey";
 import QuestionTextArea from "./QuestionTextArea";
-import { getFormattedText } from "../utils/utlis";
+import { getFormattedText, parseImageAndText } from "../utils/utlis";
 import { ChatContent } from "./ChatContent";
+import { extractAIAnswerContent } from "../helpers/ReadFileContents";
+import UploadImageCloudinary from "../helpers/UploadImage";
+import { buildMessages } from "../utils/prompt";
 
 const examples = [
   "Create chatbox using jsx.",
@@ -42,7 +45,7 @@ const ChatBox = () => {
     isFetching,
     setIsFetching,
     setQuestion,
-    question
+    question,
   } = useContext(EditorPageContext);
 
   /* Max z-index of monaco editor is 11*/
@@ -59,7 +62,53 @@ const ChatBox = () => {
   const [errorMessage, setErrorMessage] = useState({});
   const [validAPI, setValidAPI] = useState("");
   const [dataChats, setDataChats] = useState([]);
-  const [heightAdder, setHeightAdder] = useState('auto');
+  const [heightAdder, setHeightAdder] = useState("auto");
+  const [isUploadVisible, setIsUploadVisible] = useState(false);
+  const fileInputRef = useRef(null);
+  const [uploadedImageUrls, setUploadedImageUrls] = useState([]);
+  const [genImage2Code, setGenImage2Code] = useState(false);
+
+  const processStreamData = async (reader, setChats, aiRes) => {
+    let accumulatedResponse = aiRes || "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      // Tách dữ liệu thành từng dòng và lọc ra những dòng không rỗng
+      const decodedLines = value
+        .split("\n")
+        .filter((line) => line.trim() !== "");
+
+      for (const line of decodedLines) {
+        if (line.startsWith("data:")) {
+          const jsonStr = line.replace("data:", "").trim();
+          if (jsonStr === "[DONE]") {
+            break;
+          }
+
+          try {
+            const json = JSON.parse(jsonStr);
+            const content = json.choices?.[0]?.delta?.content;
+            if (content) {
+              accumulatedResponse += content;
+
+              // Cập nhật trạng thái với nội dung mới
+              setChats([
+                // ...chats,
+                { role: "user", content: inputValue },
+                { role: "assistant", content: accumulatedResponse },
+              ]);
+            }
+          } catch (error) {
+            console.error("Failed to parse JSON:", error);
+          }
+        }
+      }
+    }
+
+    return accumulatedResponse;
+  };
 
   const handleSendMessage = useCallback(async () => {
     if (inputValue.trim() && !isFetching) {
@@ -78,39 +127,60 @@ const ChatBox = () => {
 
       // Handle sending the message
       try {
-        const response = await fetch(process.env.REACT_APP_API_CHATBOX_V1, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            stream: true,
-            // messages: [...chats, { role: "user", content: inputValue }],
-            messages: [...dataChats, { role: "user", content: inputValue }],
-          }),
-        });
+        const response = await fetch(
+          validAPI
+            ? "https://api.openai.com/v1/chat/completions"
+            : process.env.REACT_APP_API_CHATBOX_V1,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${validAPI}`,
+            },
+
+            body: JSON.stringify({
+              // model: "gpt-4o-mini",
+              model: "gpt-3.5-turbo",
+
+              stream: true,
+              // messages: [...chats, { role: "user", content: inputValue }],
+              messages: [...dataChats, { role: "user", content: inputValue }],
+            }),
+          }
+        );
 
         const readData = response.body
           .pipeThrough(new TextDecoderStream())
           .getReader();
-        let aiRes = "";
-        while (true) {
-          const { done, value } = await readData.read();
 
-          if (done) break;
-          aiRes += value;
-          //show streaming chats
-          setChats([
-            // ...chats,
-            { role: "user", content: inputValue },
-            { role: "assistant", content: aiRes },
-          ]);
+        let aiRes = "";
+        let finalResponse = "";
+        if (validAPI) {
+          //fetch from openai server
+          finalResponse = await processStreamData(readData, setChats, "");
+        } else {
+          // fetch from code2d server
+          while (true) {
+            const { done, value } = await readData.read();
+            if (done) break;
+            aiRes += value;
+
+            //show streaming chats
+            setChats([
+              // ...chats,
+              { role: "user", content: inputValue },
+              { role: "assistant", content: aiRes },
+            ]);
+          }
         }
+
         //add height for asisstant
         addHeightForAnswerWrap();
         //Save chats
         setDataChats([
           ...dataChats,
           { role: "user", content: inputValue },
-          { role: "assistant", content: aiRes },
+          { role: "assistant", content: validAPI ? finalResponse : aiRes },
         ]);
       } catch (error) {
         // console.error("Error in fetch:", error);
@@ -154,10 +224,14 @@ const ChatBox = () => {
       answerWrapHeight += element.clientHeight;
     });
 
-    if(answerWrapHeight < container.clientHeight) {
-      const assistant = document.getElementsByClassName('answer-wrap assistant')
-      const assistantHeight = assistant[assistant.length-1].clientHeight;
-      setHeightAdder(assistantHeight + (container.clientHeight - answerWrapHeight) + 10 );
+    if (answerWrapHeight < container.clientHeight) {
+      const assistant = document.getElementsByClassName(
+        "answer-wrap assistant"
+      );
+      const assistantHeight = assistant[assistant.length - 1].clientHeight;
+      setHeightAdder(
+        assistantHeight + (container.clientHeight - answerWrapHeight) + 10
+      );
     }
   };
 
@@ -209,7 +283,7 @@ const ChatBox = () => {
     let i = 2;
     function handleScroll() {
       if (answersBox?.scrollTop === 0) {
-        setHeightAdder('auto');
+        setHeightAdder("auto");
         if (dataChats.length % 2 === 1) {
           return;
         }
@@ -238,8 +312,132 @@ const ChatBox = () => {
     }
   }, [inputValue, dataChats]);
 
+  //handle mouse on
+  const handleMouseEnter = () => {
+    setIsUploadVisible(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsUploadVisible(false);
+  };
+
+  //process uploaded image
+  useEffect(() => {
+    if (uploadedImageUrls.length > 0) {
+      setChats((prevChats) => [
+        // ...prevChats,
+        {
+          role: "user",
+          content: `uploaded_image:${uploadedImageUrls[2]}-text:Generate HTML CSS JS from image`,
+        },
+      ]);
+      setDataChats([
+        // ...dataChats,
+        {
+          role: "user",
+          content: `uploaded_image:${uploadedImageUrls[2]}-text:Generate HTML CSS JS from image`,
+        },
+      ]);
+      setGenImage2Code(true);
+      setUploadedImageUrls([]);
+    }
+  }, [uploadedImageUrls]);
+
+  useEffect(() => {
+    const genCodefromImage = async () => {
+      setIsFetching(true);
+      // console.log("dataChats::", dataChats?.[dataChats.length - 1]?.content);
+      const content = dataChats[dataChats.length - 1]?.content;
+      const dataImage = parseImageAndText(content);
+      const messages = await buildMessages(dataImage.imageUrl);
+      console.log("messages::", messages);
+      try {
+        const response = await fetch(
+          validAPI
+            ? "https://api.openai.com/v1/chat/completions"
+            : process.env.REACT_APP_API_CHATBOX_V1,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${validAPI}`,
+            },
+            body: JSON.stringify({
+              // model: "gpt-4o-mini",
+              model: "gpt-3.5-turbo",
+              stream: true,
+              messages: messages,
+            }),
+          }
+        );
+        const readData = response.body
+          .pipeThrough(new TextDecoderStream())
+          .getReader();
+        let aiRes = "";
+        let finalResponse = "";
+        if (validAPI) {
+          //fetch from openai server
+          finalResponse = await processStreamData(readData, setChats, "");
+        } else {
+          // fetch from code2d server
+          while (true) {
+            const { done, value } = await readData.read();
+            if (done) break;
+            aiRes += value;
+            //show streaming chats
+            setChats([
+              // ...chats,
+              { role: "user", content },
+              { role: "assistant", content: aiRes },
+            ]);
+          }
+        }
+        //add height for asisstant
+        addHeightForAnswerWrap();
+        //Save chats
+        setDataChats([
+          ...dataChats,
+          { role: "user", content },
+          { role: "assistant", content: validAPI ? finalResponse : aiRes },
+        ]);
+      } catch (error) {
+        console.error("Error in fetch:", error);
+        setChats([
+          // ...chats,
+          { role: "user", content }, // Include user message
+          {
+            role: "assistant",
+            content:
+              "Sorry! Have some problems with chat bot service. Please try again!",
+          },
+        ]);
+        setDataChats([
+          ...dataChats,
+          { role: "user", content },
+          {
+            role: "assistant",
+            content:
+              "Sorry! Have some problems with chat bot service. Please try again!",
+          },
+        ]);
+      } finally {
+        setIsFetching(false);
+        setGenImage2Code(false);
+      }
+    };
+
+    if (genImage2Code) {
+      genCodefromImage();
+    }
+  }, [genImage2Code]);
+
   return (
-    <div className="chatbox-container" style={{ zIndex }}>
+    <div
+      className="chatbox-container"
+      style={{ zIndex }}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <div
         className={`slide-box ${isChatBoxOpen ? "open" : ""}  ${
           isDarkModeChatBox ? "" : "light-mode"
@@ -247,15 +445,23 @@ const ChatBox = () => {
       >
         {/* Taskbar */}
         <div className="chatbox-taskbar">
-          <TbNewSection
-            className={`chatBox-icon ${isFetching ? "disabled" : ""} `}
-            id="newChat-icon"
-            title="New chat"
-            onClick={() => {
-              setChats([]);
-              setDataChats([]);
-            }}
-          />
+          <div className="chatBox-rightIcon">
+            <TbNewSection
+              className={`chatBox-icon ${isFetching ? "disabled" : ""} `}
+              id="newChat-icon"
+              title="New chat"
+              onClick={() => {
+                setChats([]);
+                setDataChats([]);
+              }}
+            />
+            <div className="chatBox-icon">
+              <UploadImageCloudinary
+                setUploadedImageUrls={setUploadedImageUrls}
+              />
+              {/* <TbCloudUpload title="Upload image" /> */}
+            </div>
+          </div>
           <span className="chatBox-title">Chat GPT</span>
 
           <div className="rightIcon chat-box">
@@ -367,7 +573,7 @@ const ChatBox = () => {
           {dataChats.length > 0 ? (
             <div className="answers-box-chats" id="answers-box-chats">
               {chats.map((item, index) => (
-                <div key={index} className={`answer-wrap ${item.role}`} >
+                <div key={index} className={`answer-wrap ${item.role}`}>
                   {item.role === "user" ? (
                     <span className="role">
                       <FaUser />
@@ -382,7 +588,12 @@ const ChatBox = () => {
                       />
                     </span>
                   )}
-                  <div className="answer" style={{ height: item.role === 'user' ? 'auto' : heightAdder}}>
+                  <div
+                    className="answer"
+                    style={{
+                      height: item.role === "user" ? "auto" : heightAdder,
+                    }}
+                  >
                     <ChatContent
                       text={getFormattedText(item.content)}
                     ></ChatContent>
@@ -408,7 +619,7 @@ const ChatBox = () => {
                     className="example"
                     onClick={() => {
                       setInputValue(example);
-                      document.getElementById('question-box-chats')?.focus();
+                      document.getElementById("question-box-chats")?.focus();
                     }}
                   >
                     {example}

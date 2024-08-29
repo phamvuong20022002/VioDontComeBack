@@ -1,9 +1,9 @@
-import React, { useState, useContext, useRef, useEffect, memo} from "react";
+import React, { useState, useContext, useRef, useEffect, memo } from "react";
 import { FaRegStopCircle } from "react-icons/fa";
 import { FiSend } from "react-icons/fi";
 import { EditorPageContext } from "../contexts/editorpage_contexts";
 
-const QuestionTextArea = ({handleSendMessage, setInputValue, inputValue }) => {
+const QuestionTextArea = ({ handleSendMessage, setInputValue, inputValue }) => {
   const { isChatBoxOpen, question, isFetching } = useContext(EditorPageContext);
   const inputRef = useRef(null);
   const timeoutRef = useRef(null);

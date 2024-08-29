@@ -19,7 +19,7 @@
 .env.production.local
 
 #env 
-.env
+#.env
 
 #lock
 package-lock.json

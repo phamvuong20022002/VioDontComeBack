@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
+const morgan = require("morgan");
 const http = require("http");
 const helmet = require("helmet");
 const compression = require("compression");
@@ -20,7 +21,11 @@ app.use(
     origin: "*",
   })
 );
-app.use(express.json());
+app.use(morgan("dev"));
+
+// app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
 //create server
 const server = http.createServer(app);
@@ -39,6 +44,18 @@ global._userSocketMap = {};
 global._tabsData = [];
 global._selectedTabs = [];
 global._savedRooms = [];
+
+//Log User Socket Connection
+global._io.on("connection", (socket) => {
+  const userAgent = socket.handshake.headers["user-agent"];
+
+  console.log(`New client connected: ${socket.id}`);
+  console.log(`User Agent: ${userAgent}`);
+
+  socket.on("disconnect", () => {
+    console.log(`Client disconnected: ${socket.id}`);
+  });
+});
 
 //Route
 app.use(require("./src/routes/editorOnline.route"));
@@ -60,6 +77,23 @@ app.post("/aiCompletion", async (req, res) => {
 //Services
 global._io.on("connection", EditorOnlineService.connection);
 global._openai = openai;
+
+//handling errors
+app.use((req, res, next) => {
+  const error = new Error("Service Not Found");
+  error.status = 404;
+  next(error);
+});
+
+app.use((err, req, res, next) => {
+  const statusCode = err.status || 500;
+  return res.status(statusCode).json({
+    status: "error",
+    code: statusCode,
+    stack: err.stack,
+    message: err.message || "Internal Server Error",
+  });
+});
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
